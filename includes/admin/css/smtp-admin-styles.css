@@ -1,0 +1,225 @@
+/* Estilos adicionales para la página de SMTP - Solwed WP Plugin */
+
+.solwed-wp-mail-status {
+    margin: 15px 0;
+}
+
+.solwed-wp-mail-status .widefat th {
+    background-color: #f9f9f9;
+    font-weight: 600;
+}
+
+.solwed-wp-mail-status .widefat td code {
+    background-color: #f0f0f1;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 13px;
+}
+
+.solwed-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.solwed-stat-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 20px;
+    text-align: center;
+    transition: box-shadow 0.3s ease;
+}
+
+.solwed-stat-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.solwed-stat-number {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #0073aa;
+}
+
+.solwed-stat-label {
+    font-size: 14px;
+    color: #666;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+.solwed-form-section {
+    background: #fff;
+    margin: 20px 0;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+}
+
+.solwed-form-section h2 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #0073aa;
+    color: #0073aa;
+}
+
+.solwed-form-section h3 {
+    color: #333;
+    margin-top: 25px;
+}
+
+.solwed-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.solwed-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.solwed-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.solwed-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .solwed-slider {
+    background-color: #0073aa;
+}
+
+input:checked + .solwed-slider:before {
+    transform: translateX(26px);
+}
+
+.solwed-button {
+    background: #0073aa !important;
+    color: white !important;
+    border-color: #0073aa !important;
+    text-decoration: none !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.solwed-button:hover,
+.solwed-button:focus {
+    background: #005a87 !important;
+    border-color: #005a87 !important;
+    color: white !important;
+}
+
+.solwed-btn {
+    background: #0073aa !important;
+    border-color: #0073aa !important;
+}
+
+.solwed-btn:hover,
+.solwed-btn:focus {
+    background: #005a87 !important;
+    border-color: #005a87 !important;
+}
+
+.solwed-form-actions {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.solwed-status-badge {
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.solwed-status-badge.sent {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.solwed-status-badge.failed {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.solwed-error-tooltip {
+    display: none;
+    position: absolute;
+    background: #333;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    max-width: 300px;
+    z-index: 9999;
+    margin-top: 5px;
+}
+
+.dashicons.dashicons-warning:hover + .solwed-error-tooltip {
+    display: block;
+}
+
+/* Responsive */
+@media (max-width: 782px) {
+    .solwed-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .solwed-form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+/* Notificaciones personalizadas */
+.notice.notice-info.solwed-notice {
+    border-left-color: #0073aa;
+}
+
+.notice.notice-info.solwed-notice p {
+    font-size: 14px;
+}
+
+/* Mejoras para la tabla de logs */
+.wp-list-table.logs .column-timestamp {
+    width: 150px;
+}
+
+.wp-list-table.logs .column-status {
+    width: 100px;
+    text-align: center;
+}
+
+.wp-list-table.logs .column-error_message {
+    width: 40px;
+    text-align: center;
+}

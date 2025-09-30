@@ -3,7 +3,7 @@
  * Plugin Name: Solwed WP
  * Plugin URI: https://solwed.es
  * Description: Plugin profesional para gestión web desarrollado por Solwed - Soluciones Web a Medida
- * Version: 2.1.0
+ * Version: 2.1.1
  * Author: Solwed - Solutions Website Design
  * Author URI: https://solwed.es
  * License: GPL v2 or later
@@ -30,7 +30,7 @@ if (version_compare(PHP_VERSION, '8.1', '<')) {
 }
 
 // Definir constantes del plugin
-define('SOLWED_WP_VERSION', '2.1.0');
+define('SOLWED_WP_VERSION', '2.1.1');
 define('SOLWED_WP_PLUGIN_FILE', __FILE__);
 define('SOLWED_WP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SOLWED_WP_PLUGIN_URL', plugin_dir_url(__FILE__));

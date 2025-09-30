@@ -83,7 +83,7 @@ class Solwed_WP_Admin_Actions {
      */
     private function save_appearance_settings(): void {
         $banner_enabled = isset($_POST['banner_enabled']) && $_POST['banner_enabled'] === '1';
-        $banner_text = sanitize_text_field($_POST['banner_text'] ?? 'Powered by Solwed - Desarrollo Web Profesional');
+        $banner_text = sanitize_text_field($_POST['banner_text'] ?? 'Desarrollo Web Profesional');
         
         update_option(SOLWED_WP_PREFIX . 'banner_enabled', $banner_enabled);
         update_option(SOLWED_WP_PREFIX . 'banner_text', $banner_text);

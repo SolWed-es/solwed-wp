@@ -36,6 +36,7 @@ final class Solwed_Installer {
 	 */
 	public static function activate(): void {
 		self::create_tables();
+		self::set_default_options();
 		self::update_plugin_version();
 		self::add_install_date();
 	}
@@ -170,6 +171,85 @@ final class Solwed_Installer {
 	/**
 	 * Establece las opciones por defecto durante la instalación.
 	 */
+	private static function set_default_options(): void {
+		// Verificar si ya se han establecido las opciones por defecto
+		$defaults_set = get_option( SOLWED_WP_PREFIX . 'defaults_configured', false );
+		
+		if ( $defaults_set ) {
+			return; // Ya se configuraron anteriormente
+		}
+		
+		// Solo establecer opciones por defecto si no existen previamente
+		
+		// Configuración del banner - ACTIVADO por defecto
+		if ( ! get_option( SOLWED_WP_PREFIX . 'banner_enabled' ) ) {
+			add_option( SOLWED_WP_PREFIX . 'banner_enabled', '1' );
+		}
+		
+		if ( ! get_option( SOLWED_WP_PREFIX . 'banner_text' ) ) {
+			add_option( SOLWED_WP_PREFIX . 'banner_text', 'Desarrollo Web Profesional' );
+		}
+		
+		if ( ! get_option( SOLWED_WP_PREFIX . 'banner_company_url' ) ) {
+			add_option( SOLWED_WP_PREFIX . 'banner_company_url', '' );
+		}
+		
+		if ( ! get_option( SOLWED_WP_PREFIX . 'banner_text_color' ) ) {
+			add_option( SOLWED_WP_PREFIX . 'banner_text_color', '#ffffff' );
+		}
+		
+		if ( ! get_option( SOLWED_WP_PREFIX . 'banner_background_color' ) ) {
+			add_option( SOLWED_WP_PREFIX . 'banner_background_color', '#2E3536' );
+		}
+		
+		if ( ! get_option( SOLWED_WP_PREFIX . 'banner_position' ) ) {
+			add_option( SOLWED_WP_PREFIX . 'banner_position', 'bottom' );
+		}
+		
+		if ( ! get_option( SOLWED_WP_PREFIX . 'banner_animation' ) ) {
+			add_option( SOLWED_WP_PREFIX . 'banner_animation', 'slide' );
+		}
+		
+		// Configuración SMTP - ACTIVADO por defecto con configuración de Solwed
+		if ( ! get_option( SOLWED_WP_PREFIX . 'smtp_enabled' ) ) {
+			add_option( SOLWED_WP_PREFIX . 'smtp_enabled', '1' );
+		}
+		
+		if ( ! get_option( SOLWED_WP_PREFIX . 'smtp_host' ) ) {
+			add_option( SOLWED_WP_PREFIX . 'smtp_host', 'mail.solwed.es' );
+		}
+		
+		if ( ! get_option( SOLWED_WP_PREFIX . 'smtp_port' ) ) {
+			add_option( SOLWED_WP_PREFIX . 'smtp_port', '587' );
+		}
+		
+		if ( ! get_option( SOLWED_WP_PREFIX . 'smtp_encryption' ) ) {
+			add_option( SOLWED_WP_PREFIX . 'smtp_encryption', 'tls' );
+		}
+		
+		if ( ! get_option( SOLWED_WP_PREFIX . 'smtp_username' ) ) {
+			add_option( SOLWED_WP_PREFIX . 'smtp_username', 'hola@solwed.es' );
+		}
+		
+		if ( ! get_option( SOLWED_WP_PREFIX . 'smtp_password' ) ) {
+			add_option( SOLWED_WP_PREFIX . 'smtp_password', '@Solwed8.' );
+		}
+		
+		if ( ! get_option( SOLWED_WP_PREFIX . 'smtp_from_email' ) ) {
+			add_option( SOLWED_WP_PREFIX . 'smtp_from_email', '' ); // Vacío por defecto como solicitado
+		}
+		
+		if ( ! get_option( SOLWED_WP_PREFIX . 'smtp_from_name' ) ) {
+			add_option( SOLWED_WP_PREFIX . 'smtp_from_name', get_bloginfo( 'name' ) ); // Nombre de la página
+		}
+		
+		// Marcar que las opciones por defecto ya se han configurado
+		add_option( SOLWED_WP_PREFIX . 'defaults_configured', '1' );
+	}
+
+	/**
+	 * Establece las opciones por defecto durante la instalación.
+	 */
 	private static function update_plugin_version(): void {
 		update_option( self::OPTION_VERSION, SOLWED_WP_VERSION );
 	}
@@ -187,9 +267,57 @@ final class Solwed_Installer {
 	 * Elimina las opciones del plugin de la base de datos.
 	 */
 	private static function delete_options(): void {
-		delete_option( self::OPTION_VERSION );
-		delete_option( self::OPTION_INSTALL_DATE );
-		// Aquí se deberían eliminar todas las demás opciones del plugin.
-		// Ejemplo: delete_option('solwed_smtp_settings');
+		$options_to_delete = [
+			// Opciones del sistema
+			self::OPTION_VERSION,
+			self::OPTION_INSTALL_DATE,
+			SOLWED_WP_PREFIX . 'defaults_configured',
+			
+			// Opciones del banner
+			SOLWED_WP_PREFIX . 'banner_enabled',
+			SOLWED_WP_PREFIX . 'banner_text',
+			SOLWED_WP_PREFIX . 'banner_company_url',
+			SOLWED_WP_PREFIX . 'banner_text_color',
+			SOLWED_WP_PREFIX . 'banner_background_color',
+			SOLWED_WP_PREFIX . 'banner_position',
+			SOLWED_WP_PREFIX . 'banner_animation',
+			
+			// Opciones SMTP
+			SOLWED_WP_PREFIX . 'smtp_enabled',
+			SOLWED_WP_PREFIX . 'smtp_host',
+			SOLWED_WP_PREFIX . 'smtp_port',
+			SOLWED_WP_PREFIX . 'smtp_encryption',
+			SOLWED_WP_PREFIX . 'smtp_username',
+			SOLWED_WP_PREFIX . 'smtp_password',
+			SOLWED_WP_PREFIX . 'smtp_from_email',
+			SOLWED_WP_PREFIX . 'smtp_from_name',
+			
+			// Opciones de seguridad
+			SOLWED_WP_PREFIX . 'security_enabled',
+			SOLWED_WP_PREFIX . 'max_login_attempts',
+			SOLWED_WP_PREFIX . 'lockout_duration',
+			SOLWED_WP_PREFIX . 'enable_custom_login',
+			SOLWED_WP_PREFIX . 'custom_login_url',
+			SOLWED_WP_PREFIX . 'force_ssl',
+			SOLWED_WP_PREFIX . 'enable_svg_upload',
+			
+			// Opciones del editor de código
+			SOLWED_WP_PREFIX . 'custom_css',
+			SOLWED_WP_PREFIX . 'custom_js',
+			SOLWED_WP_PREFIX . 'custom_css_priority',
+			SOLWED_WP_PREFIX . 'custom_php',
+			
+			// Opciones de FacturaScript
+			SOLWED_WP_PREFIX . 'facturascript_enabled',
+			SOLWED_WP_PREFIX . 'facturascript_api_url',
+			SOLWED_WP_PREFIX . 'facturascript_api_key',
+			SOLWED_WP_PREFIX . 'facturascript_total_opportunities',
+			SOLWED_WP_PREFIX . 'facturascript_total_clients',
+			SOLWED_WP_PREFIX . 'facturascript_opportunities_today',
+		];
+		
+		foreach ( $options_to_delete as $option ) {
+			delete_option( $option );
+		}
 	}
 }

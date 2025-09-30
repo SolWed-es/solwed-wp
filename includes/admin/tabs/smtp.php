@@ -190,14 +190,14 @@ final class Solwed_SMTP_Unified {
         }
 
         return [
-            'enabled' => ($options['smtp_enabled'] ?? '0') === '1',
-            'host' => trim($options['smtp_host'] ?? ''),
+            'enabled' => ($options['smtp_enabled'] ?? '1') === '1',
+            'host' => trim($options['smtp_host'] ?? 'mail.solwed.es'),
             'port' => (int) ($options['smtp_port'] ?? self::SMTP_PORTS['tls']),
-            'username' => trim($options['smtp_username'] ?? ''),
-            'password' => $options['smtp_password'] ?? '',
+            'username' => trim($options['smtp_username'] ?? 'hola@solwed.es'),
+            'password' => $options['smtp_password'] ?? '@Solwed8.',
             'encryption' => $options['smtp_encryption'] ?? 'tls',
             'from_name' => trim($options['smtp_from_name'] ?? get_bloginfo('name')),
-            'from_email' => trim($options['smtp_from_email'] ?? self::DEFAULT_FROM_EMAIL)
+            'from_email' => trim($options['smtp_from_email'] ?? '') // Vacío por defecto como solicitado
         ];
     }
 
@@ -1224,13 +1224,13 @@ function render_smtp_tab() {
     $stats = $smtp->get_stats();
     
     $smtp_settings = [
-        'host' => get_option(SOLWED_WP_PREFIX . 'smtp_host', ''),
+        'host' => get_option(SOLWED_WP_PREFIX . 'smtp_host', 'mail.solwed.es'),
         'port' => get_option(SOLWED_WP_PREFIX . 'smtp_port', 587),
-        'username' => get_option(SOLWED_WP_PREFIX . 'smtp_username', ''),
-        'password' => get_option(SOLWED_WP_PREFIX . 'smtp_password', ''),
+        'username' => get_option(SOLWED_WP_PREFIX . 'smtp_username', 'hola@solwed.es'),
+        'password' => get_option(SOLWED_WP_PREFIX . 'smtp_password', '@Solwed8.'),
         'encryption' => get_option(SOLWED_WP_PREFIX . 'smtp_encryption', 'tls'),
         'from_name' => get_option(SOLWED_WP_PREFIX . 'smtp_from_name', get_bloginfo('name')),
-        'from_email' => get_option(SOLWED_WP_PREFIX . 'smtp_from_email', 'soporte@solwed.es')
+        'from_email' => get_option(SOLWED_WP_PREFIX . 'smtp_from_email', '') // Vacío por defecto como solicitado
     ];
     
     wp_enqueue_script('jquery');

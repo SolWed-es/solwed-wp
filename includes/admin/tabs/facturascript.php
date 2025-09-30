@@ -729,7 +729,7 @@ function render_facturascript_tab(): void {
                     
                     <div style="display: flex; gap: 20px; justify-content: center; padding: 20px;">
                         <button type="button" id="bulk-import-fs" class="solwed-btn">
-                            📥 <?php _e('Importar Submissions', 'solwed-wp'); ?>
+                            📥 <?php _e('Importar Envíos', 'solwed-wp'); ?>
                         </button>
                     </div>
                     

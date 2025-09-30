@@ -21,7 +21,8 @@ class Solwed_Security_Unified {
             'lockout_duration' => get_option(SOLWED_WP_PREFIX . 'lockout_duration', 1800),
             'enable_custom_login' => get_option(SOLWED_WP_PREFIX . 'enable_custom_login', '0'),
             'custom_login_url' => get_option(SOLWED_WP_PREFIX . 'custom_login_url', 'login'),
-            'force_ssl' => get_option(SOLWED_WP_PREFIX . 'force_ssl', '0')
+            'force_ssl' => get_option(SOLWED_WP_PREFIX . 'force_ssl', '0'),
+            'enable_svg_upload' => get_option(SOLWED_WP_PREFIX . 'enable_svg_upload', '0')
         ];
     }
 
@@ -29,6 +30,13 @@ class Solwed_Security_Unified {
         // Inicializar funcionalidades de seguridad si están habilitadas
         if ($this->is_ssl_forced()) {
             add_action('template_redirect', [$this, 'enforce_ssl'], 1);
+        }
+
+        // Habilitar soporte para SVG si está activado
+        if ($this->is_svg_upload_enabled()) {
+            add_filter('upload_mimes', [$this, 'enable_svg_mime_type']);
+            add_filter('wp_check_filetype_and_ext', [$this, 'fix_svg_upload'], 10, 4);
+            add_action('admin_head', [$this, 'fix_svg_display']);
         }
     }
 
@@ -38,6 +46,10 @@ class Solwed_Security_Unified {
 
     public function is_ssl_forced(): bool {
         return $this->config['force_ssl'] === '1';
+    }
+
+    public function is_svg_upload_enabled(): bool {
+        return $this->config['enable_svg_upload'] === '1';
     }
 
     /**
@@ -58,6 +70,44 @@ class Solwed_Security_Unified {
     }
 
     /**
+     * Habilita el tipo MIME SVG para subidas
+     */
+    public function enable_svg_mime_type(array $mimes): array {
+        $mimes['svg'] = 'image/svg+xml';
+        return $mimes;
+    }
+
+    /**
+     * Corrige la detección de archivos SVG
+     */
+    public function fix_svg_upload($data, $file, $filename, $mimes): array {
+        $filetype = wp_check_filetype($filename, $mimes);
+        
+        if ($filetype['ext'] === 'svg') {
+            $data['ext'] = 'svg';
+            $data['type'] = 'image/svg+xml';
+        }
+        
+        return $data;
+    }
+
+    /**
+     * Corrige la visualización de SVG en el admin
+     */
+    public function fix_svg_display(): void {
+        echo '<style>
+            .attachment-266x266, .thumbnail img {
+                width: 100% !important;
+                height: auto !important;
+            }
+            .media-icon img[src$=".svg"] {
+                width: 100%;
+                height: auto;
+            }
+        </style>';
+    }
+
+    /**
      * Guardar configuración de seguridad
      */
     public function save_settings(array $data): bool {
@@ -71,7 +121,8 @@ class Solwed_Security_Unified {
             'lockout_duration' => isset($data['lockout_duration']) ? (int) $data['lockout_duration'] : 1800,
             'enable_custom_login' => isset($data['enable_custom_login']) ? '1' : '0',
             'custom_login_url' => isset($data['custom_login_url']) ? sanitize_text_field($data['custom_login_url']) : 'login',
-            'force_ssl' => isset($data['force_ssl']) ? '1' : '0'
+            'force_ssl' => isset($data['force_ssl']) ? '1' : '0',
+            'enable_svg_upload' => isset($data['enable_svg_upload']) ? '1' : '0'
         ];
 
         $success = true;
@@ -139,7 +190,8 @@ function render_security_tab() {
         'lockout_duration' => get_option(SOLWED_WP_PREFIX . 'lockout_duration', 1800),
         'enable_custom_login' => get_option(SOLWED_WP_PREFIX . 'enable_custom_login', '0'),
         'custom_login_url' => get_option(SOLWED_WP_PREFIX . 'custom_login_url', 'login'),
-        'force_ssl' => get_option(SOLWED_WP_PREFIX . 'force_ssl', '0')
+        'force_ssl' => get_option(SOLWED_WP_PREFIX . 'force_ssl', '0'),
+        'enable_svg_upload' => get_option(SOLWED_WP_PREFIX . 'enable_svg_upload', '0')
     ];
     ?>
 
@@ -277,6 +329,33 @@ function render_security_tab() {
                     </table>
                 </div>
 
+                <!-- Sección de SVG Upload -->
+                <div class="solwed-form-section">
+                    <h2><?php _e('📁 Soporte para Archivos SVG', 'solwed-wp'); ?></h2>
+                    <p class="description"><?php _e('Permite la subida de archivos SVG a la biblioteca de medios de WordPress.', 'solwed-wp'); ?></p>
+                    
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><?php _e('Habilitar subida de SVG', 'solwed-wp'); ?></th>
+                            <td>
+                                <label class="solwed-switch">
+                                    <input type="checkbox" name="enable_svg_upload" value="1" <?php checked($security_settings['enable_svg_upload'], '1'); ?>>
+                                    <span class="solwed-slider"></span>
+                                </label>
+                                <p class="description">
+                                    <?php _e('Permite subir archivos SVG a la biblioteca de medios de WordPress.', 'solwed-wp'); ?>
+                                    <?php if ($security_settings['enable_svg_upload'] === '1'): ?>
+                                        <br><strong style="color: #46B450;"><?php _e('✓ Subida de SVG habilitada', 'solwed-wp'); ?></strong>
+                                    <?php else: ?>
+                                        <br><strong style="color: #d63638;"><?php _e('⚠ Subida de SVG deshabilitada', 'solwed-wp'); ?></strong>
+                                    <?php endif; ?>
+                                    <br><em style="color: #666;"><?php _e('Nota: Los archivos SVG pueden contener código JavaScript. Use solo archivos de fuentes confiables.', 'solwed-wp'); ?></em>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
                 <div class="solwed-form-actions">
                     <?php submit_button(__('Guardar Configuración', 'solwed-wp'), 'primary solwed-btn'); ?>
                 </div>
@@ -301,6 +380,11 @@ function render_security_tab() {
                     <p><strong><?php _e('Login Personalizado:', 'solwed-wp'); ?></strong> 
                         <span class="solwed-status-badge <?php echo ($security_settings['enable_custom_login'] === '1') ? 'sent' : 'failed'; ?>">
                             <?php echo ($security_settings['enable_custom_login'] === '1') ? __('Activo', 'solwed-wp') : __('Inactivo', 'solwed-wp'); ?>
+                        </span>
+                    </p>
+                    <p><strong><?php _e('Subida SVG:', 'solwed-wp'); ?></strong> 
+                        <span class="solwed-status-badge <?php echo ($security_settings['enable_svg_upload'] === '1') ? 'sent' : 'failed'; ?>">
+                            <?php echo ($security_settings['enable_svg_upload'] === '1') ? __('Habilitada', 'solwed-wp') : __('Deshabilitada', 'solwed-wp'); ?>
                         </span>
                     </p>
                     <p><strong><?php _e('Máx. Intentos:', 'solwed-wp'); ?></strong> <?php echo esc_html($security_settings['max_attempts']); ?></p>
@@ -342,6 +426,7 @@ function render_security_tab() {
                     <li><?php _e('Use SSL/HTTPS siempre para mayor seguridad', 'solwed-wp'); ?></li>
                     <li><?php _e('Mantenga 3 intentos máximos para balance usabilidad-seguridad', 'solwed-wp'); ?></li>
                     <li><?php _e('El login personalizado oculta las URLs estándar de WordPress', 'solwed-wp'); ?></li>
+                    <li><?php _e('Los archivos SVG solo de fuentes confiables (pueden contener JavaScript)', 'solwed-wp'); ?></li>
                     <li><?php _e('Monitoree regularmente las estadísticas de bloqueos', 'solwed-wp'); ?></li>
                 </ul>
             </div>

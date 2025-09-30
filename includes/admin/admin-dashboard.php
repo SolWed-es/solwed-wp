@@ -375,7 +375,7 @@ $banner_enabled = $appearance ? $appearance->is_banner_enabled() : false;
                         <p class="solwed-stat-label"><?php _e('Posición', 'solwed-wp'); ?></p>
                     </div>
                     <div class="solwed-stat-box">
-                        <span class="solwed-stat-number" style="font-size: 12px;"><?php echo esc_html(ucfirst(get_option(SOLWED_WP_PREFIX . 'banner_animation', 'none'))); ?></span>
+                        <span class="solwed-stat-number" style="font-size: 12px;"><?php echo esc_html(ucfirst(get_option(SOLWED_WP_PREFIX . 'banner_animation', 'slide'))); ?></span>
                         <p class="solwed-stat-label"><?php _e('Animación', 'solwed-wp'); ?></p>
                     </div>
                 </div>

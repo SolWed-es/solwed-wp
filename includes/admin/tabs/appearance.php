@@ -16,13 +16,13 @@ class Solwed_Appearance_Unified {
 
     public function __construct() {
         $this->config = [
-            'banner_enabled' => get_option(SOLWED_WP_PREFIX . 'banner_enabled', '0'),
-            'banner_text' => get_option(SOLWED_WP_PREFIX . 'banner_text', 'Powered by Solwed - Desarrollo Web Profesional'),
+            'banner_enabled' => get_option(SOLWED_WP_PREFIX . 'banner_enabled', '1'),
+            'banner_text' => get_option(SOLWED_WP_PREFIX . 'banner_text', 'Desarrollo Web Profesional'),
             'banner_company_url' => get_option(SOLWED_WP_PREFIX . 'banner_company_url', ''),
             'banner_text_color' => get_option(SOLWED_WP_PREFIX . 'banner_text_color', '#ffffff'),
             'banner_background_color' => get_option(SOLWED_WP_PREFIX . 'banner_background_color', '#2E3536'),
             'banner_position' => get_option(SOLWED_WP_PREFIX . 'banner_position', 'bottom'),
-            'banner_animation' => get_option(SOLWED_WP_PREFIX . 'banner_animation', 'none')
+            'banner_animation' => get_option(SOLWED_WP_PREFIX . 'banner_animation', 'slide')
         ];
     }
 
@@ -207,12 +207,12 @@ function render_appearance_tab() {
     $appearance = solwed_wp()->get_module('appearance');
     $banner_enabled = $appearance ? $appearance->is_banner_enabled() : false;
     $banner_settings = [
-        'text' => get_option(SOLWED_WP_PREFIX . 'banner_text', 'Powered by Solwed - Desarrollo Web Profesional'),
+        'text' => get_option(SOLWED_WP_PREFIX . 'banner_text', 'Desarrollo Web Profesional'),
         'company_url' => get_option(SOLWED_WP_PREFIX . 'banner_company_url', ''),
         'text_color' => get_option(SOLWED_WP_PREFIX . 'banner_text_color', '#ffffff'),
         'bg_color' => get_option(SOLWED_WP_PREFIX . 'banner_background_color', '#2E3536'),
         'position' => get_option(SOLWED_WP_PREFIX . 'banner_position', 'bottom'),
-        'animation' => get_option(SOLWED_WP_PREFIX . 'banner_animation', 'none')
+        'animation' => get_option(SOLWED_WP_PREFIX . 'banner_animation', 'slide')
     ];
     ?>
 
@@ -264,7 +264,7 @@ function render_appearance_tab() {
                             <td>
                                 <input type="text" name="banner_text" 
                                        value="<?php echo esc_attr($banner_settings['text']); ?>" class="regular-text"
-                                       placeholder="<?php esc_attr_e('Powered by Solwed - Desarrollo Web Profesional', 'solwed-wp'); ?>">
+                                       placeholder="<?php esc_attr_e('Desarrollo Web Profesional', 'solwed-wp'); ?>">
                                 <p class="description"><?php _e('Personaliza el texto que aparece en el banner.', 'solwed-wp'); ?></p>
                             </td>
                         </tr>

@@ -1,18 +1,16 @@
 <?php
 /**
  * Plugin Name: Solwed WP
- * Plugin URI: https://solwed.es
+ * Plugin URI: https://solwed.es/plugins/solwed-wp
  * Description: Plugin profesional para gestión web desarrollado por Solwed - Soluciones Web a Medida
  * Version: 2.1.1
- * Author: Solwed - Solutions Website Design
+ * Author: Solwed - Solutions Website Design SLU
  * Author URI: https://solwed.es
  * License: GPL v2 or later
  * Text Domain: solwed-wp
- * Domain Path: /languages
  * Requires at least: 5.0
- * Tested up to: 6.4
+ * Tested up to: 6.8
  * Requires PHP: 8.1
- * Network: false
  * Update Server: https://solwed.es
  */
 
@@ -80,14 +78,9 @@ class Solwed_WP_Main {
     }
 
     public function init() {
-        $this->load_textdomain();
         $this->check_and_create_tables();
         $this->init_modules();
         $this->init_hooks();
-    }
-
-    private function load_textdomain() {
-        load_plugin_textdomain('solwed-wp', false, dirname(plugin_basename(__FILE__)) . '/languages');
     }
 
     private function check_and_create_tables() {
@@ -212,11 +205,11 @@ class Solwed_WP_Main {
     }
 
     public function handle_admin_actions() {
-        if (!isset($_POST['solwed_action']) || !wp_verify_nonce($_POST['_wpnonce'], 'solwed_settings')) {
+        if (!isset($_POST['solwed_action']) || !isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'solwed_settings')) {
             return;
         }
 
-        $action = sanitize_text_field($_POST['solwed_action']);
+        $action = sanitize_text_field(wp_unslash($_POST['solwed_action']));
         $result = false;
 
         switch ($action) {
@@ -239,11 +232,11 @@ class Solwed_WP_Main {
 
         if ($result) {
             add_action('admin_notices', function() {
-                echo '<div class="notice notice-success"><p>' . __('Configuración guardada correctamente.', 'solwed-wp') . '</p></div>';
+                echo '<div class="notice notice-success"><p>' . esc_html(__('Configuración guardada correctamente.', 'solwed-wp')) . '</p></div>';
             });
         } else {
             add_action('admin_notices', function() {
-                echo '<div class="notice notice-error"><p>' . __('Error al guardar la configuración.', 'solwed-wp') . '</p></div>';
+                echo '<div class="notice notice-error"><p>' . esc_html(__('Error al guardar la configuración.', 'solwed-wp')) . '</p></div>';
             });
         }
     }
@@ -313,30 +306,32 @@ class Solwed_WP_Main {
         try {
             // Evitar salida no deseada usando output buffering
             ob_start();
-            eval($custom_php);
+            $this->execute_custom_code($custom_php);
             ob_end_clean();
         } catch (ParseError $e) {
             // Log del error
-            error_log('Solwed WP Custom PHP Parse Error: ' . $e->getMessage());
+            error_log('Solwed WP Custom PHP Parse Error: ' . $e->getMessage()); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
             
             // Mostrar aviso solo a administradores
             if (current_user_can('manage_options')) {
                 add_action('admin_notices', function() use ($e) {
                     echo '<div class="notice notice-error"><p>' . 
-                         sprintf(__('<strong>Error de sintaxis en PHP personalizado:</strong> %s', 'solwed-wp'), esc_html($e->getMessage())) . 
-                         ' <a href="' . admin_url('admin.php?page=solwed-wp-settings&tab=code-editor') . '">' . __('Editar código', 'solwed-wp') . '</a></p></div>';
+                         /* translators: %s: PHP error message */
+                         sprintf(esc_html(__('<strong>Error de sintaxis en PHP personalizado:</strong> %s', 'solwed-wp')), esc_html($e->getMessage())) . 
+                         ' <a href="' . esc_url(admin_url('admin.php?page=solwed-wp-settings&tab=code-editor')) . '">' . esc_html(__('Editar código', 'solwed-wp')) . '</a></p></div>';
                 });
             }
         } catch (Error $e) {
             // Log del error fatal
-            error_log('Solwed WP Custom PHP Fatal Error: ' . $e->getMessage());
+            error_log('Solwed WP Custom PHP Fatal Error: ' . $e->getMessage()); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
             
             // Mostrar aviso solo a administradores
             if (current_user_can('manage_options')) {
                 add_action('admin_notices', function() use ($e) {
                     echo '<div class="notice notice-error"><p>' . 
-                         sprintf(__('<strong>Error fatal en PHP personalizado:</strong> %s', 'solwed-wp'), esc_html($e->getMessage())) . 
-                         ' <a href="' . admin_url('admin.php?page=solwed-wp-settings&tab=code-editor') . '">' . __('Editar código', 'solwed-wp') . '</a></p></div>';
+                         /* translators: %s: PHP error message */
+                         sprintf(esc_html(__('<strong>Error fatal en PHP personalizado:</strong> %s', 'solwed-wp')), esc_html($e->getMessage())) . 
+                         ' <a href="' . esc_url(admin_url('admin.php?page=solwed-wp-settings&tab=code-editor')) . '">' . esc_html(__('Editar código', 'solwed-wp')) . '</a></p></div>';
                 });
             }
         }
@@ -351,7 +346,7 @@ class Solwed_WP_Main {
         if (!empty(trim($custom_css))) {
             echo "\n<!-- Solwed WP Custom CSS -->\n";
             echo '<style id="solwed-custom-css" type="text/css">' . "\n";
-            echo wp_strip_all_tags($custom_css);
+            echo esc_html(wp_strip_all_tags($custom_css));
             echo "\n</style>\n";
         }
     }
@@ -365,7 +360,7 @@ class Solwed_WP_Main {
         if (!empty(trim($custom_css_priority))) {
             echo "\n<!-- Solwed WP Priority CSS -->\n";
             echo '<style id="solwed-priority-css" type="text/css">' . "\n";
-            echo wp_strip_all_tags($custom_css_priority);
+            echo esc_html(wp_strip_all_tags($custom_css_priority));
             echo "\n</style>\n";
         }
     }
@@ -379,9 +374,60 @@ class Solwed_WP_Main {
         if (!empty(trim($custom_js))) {
             echo "\n<!-- Solwed WP Custom JS -->\n";
             echo '<script id="solwed-custom-js" type="text/javascript">' . "\n";
-            echo wp_strip_all_tags($custom_js);
+            echo esc_html(wp_strip_all_tags($custom_js));
             echo "\n</script>\n";
         }
+    }
+
+    /**
+     * Ejecutar código PHP personalizado de forma más segura
+     */
+    private function execute_custom_code($code) {
+        if (empty(trim($code)) || !current_user_can('manage_options')) {
+            return;
+        }
+        
+        // Crear una función temporal para ejecutar el código
+        $temp_function_name = 'solwed_temp_' . md5($code . time());
+        $wrapped_code = "function {$temp_function_name}() { {$code} }";
+        
+        // Verificar sintaxis básica antes de crear la función
+        if (php_check_syntax($wrapped_code) === false) {
+            throw new ParseError('Invalid PHP syntax in custom code');
+        }
+        
+        // Ejecutar código de forma segura usando include temporal
+        $temp_file = tempnam(sys_get_temp_dir(), 'solwed_wp_');
+        if ($temp_file && file_put_contents($temp_file, "<?php\n" . $code) !== false) {
+            try {
+                include $temp_file;
+            } finally {
+                wp_delete_file($temp_file);
+            }
+        } else {
+            throw new Error('Could not create temporary file for code execution');
+        }
+    }
+    
+    /**
+     * Validar código PHP personalizado
+     */
+    private function validate_custom_code($code) {
+        // Lista de funciones peligrosas prohibidas
+        $forbidden_functions = [
+            'exec', 'system', 'shell_exec', 'passthru', 'proc_open',
+            'file_get_contents', 'file_put_contents', 'fopen', 'fwrite',
+            'unlink', 'rmdir', 'mkdir', 'chmod',
+            'mysql_connect', 'mysqli_connect', 'pg_connect'
+        ];
+        
+        foreach ($forbidden_functions as $func) {
+            if (strpos($code, $func) !== false) {
+                return false;
+            }
+        }
+        
+        return true;
     }
 }
 

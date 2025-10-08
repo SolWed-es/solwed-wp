@@ -110,6 +110,85 @@ class Solwed_Appearance_Unified {
         return $result;
     }
 
+    /**
+     * Guardar configuración del banner
+     */
+    public function save_settings(): bool {
+        // Verificar nonce de seguridad
+        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'])), 'solwed_settings')) {
+            return false;
+        }
+
+        // Verificar permisos
+        if (!current_user_can('manage_options')) {
+            return false;
+        }
+
+        // Actualizar configuraciones
+        $updated = true;
+        
+        // Banner habilitado/deshabilitado
+        $banner_enabled = isset($_POST['banner_enabled']) ? '1' : '0';
+        $updated &= update_option(SOLWED_WP_PREFIX . 'banner_enabled', $banner_enabled);
+
+        // Texto del banner
+        if (isset($_POST['banner_text'])) {
+            $banner_text = sanitize_text_field(wp_unslash($_POST['banner_text']));
+            $updated &= update_option(SOLWED_WP_PREFIX . 'banner_text', $banner_text);
+        }
+
+        // URL de la empresa
+        if (isset($_POST['banner_company_url'])) {
+            $company_url = esc_url_raw(wp_unslash($_POST['banner_company_url']));
+            $updated &= update_option(SOLWED_WP_PREFIX . 'banner_company_url', $company_url);
+        }
+
+        // Color del texto (priorizar el hex manual)
+        $text_color = '#ffffff'; // valor por defecto
+        if (!empty($_POST['banner_text_color_hex'])) {
+            $text_color = sanitize_hex_color(wp_unslash($_POST['banner_text_color_hex']));
+        } elseif (!empty($_POST['banner_text_color'])) {
+            $text_color = sanitize_hex_color(wp_unslash($_POST['banner_text_color']));
+        }
+        $updated &= update_option(SOLWED_WP_PREFIX . 'banner_text_color', $text_color);
+
+        // Color de fondo (priorizar el hex manual)
+        $bg_color = '#2E3536'; // valor por defecto
+        if (!empty($_POST['banner_background_color_hex'])) {
+            $bg_color = sanitize_hex_color(wp_unslash($_POST['banner_background_color_hex']));
+        } elseif (!empty($_POST['banner_background_color'])) {
+            $bg_color = sanitize_hex_color(wp_unslash($_POST['banner_background_color']));
+        }
+        $updated &= update_option(SOLWED_WP_PREFIX . 'banner_background_color', $bg_color);
+
+        // Posición del banner
+        if (isset($_POST['banner_position'])) {
+            $position = in_array(sanitize_text_field(wp_unslash($_POST['banner_position'])), ['top', 'bottom']) ? sanitize_text_field(wp_unslash($_POST['banner_position'])) : 'bottom';
+            $updated &= update_option(SOLWED_WP_PREFIX . 'banner_position', $position);
+        }
+
+        // Animación del banner
+        if (isset($_POST['banner_animation'])) {
+            $animation = in_array(sanitize_text_field(wp_unslash($_POST['banner_animation'])), ['none', 'fade', 'slide', 'bounce']) ? sanitize_text_field(wp_unslash($_POST['banner_animation'])) : 'slide';
+            $updated &= update_option(SOLWED_WP_PREFIX . 'banner_animation', $animation);
+        }
+
+        // Actualizar configuración local
+        if ($updated) {
+            $this->config = [
+                'banner_enabled' => $banner_enabled,
+                'banner_text' => get_option(SOLWED_WP_PREFIX . 'banner_text', 'Desarrollo Web Profesional'),
+                'banner_company_url' => get_option(SOLWED_WP_PREFIX . 'banner_company_url', ''),
+                'banner_text_color' => get_option(SOLWED_WP_PREFIX . 'banner_text_color', '#ffffff'),
+                'banner_background_color' => get_option(SOLWED_WP_PREFIX . 'banner_background_color', '#2E3536'),
+                'banner_position' => get_option(SOLWED_WP_PREFIX . 'banner_position', 'bottom'),
+                'banner_animation' => get_option(SOLWED_WP_PREFIX . 'banner_animation', 'slide')
+            ];
+        }
+
+        return $updated;
+    }
+
     public function get_stats(): array {
         return [
             'banner_enabled' => $this->is_banner_enabled(),
@@ -194,7 +273,7 @@ class Solwed_Appearance_Unified {
             return;
         }
 
-        echo '<div class="solwed-banner">' . $this->get_banner_html() . '</div>';
+        echo '<div class="solwed-banner">' . wp_kses_post($this->get_banner_html()) . '</div>';
     }
 }
 
@@ -245,91 +324,91 @@ function render_appearance_tab() {
                 <?php wp_nonce_field('solwed_settings'); ?>
                 <input type="hidden" name="solwed_action" value="save_appearance">
                 <div class="solwed-form-section">
-                    <h2><?php _e('🎨 Banner Inferior', 'solwed-wp'); ?></h2>
-                    <p class="description"><?php _e('Controla la visualización del banner de Solwed en la parte inferior del sitio web.', 'solwed-wp'); ?></p>
+                    <h2><?php esc_html_e('🎨 Banner Inferior', 'solwed-wp'); ?></h2>
+                    <p class="description"><?php esc_html_e('Controla la visualización del banner de Solwed en la parte inferior del sitio web.', 'solwed-wp'); ?></p>
                     
                     <table class="form-table">
                         <tr>
-                            <th scope="row"><?php _e('Mostrar Banner', 'solwed-wp'); ?></th>
+                            <th scope="row"><?php esc_html_e('Mostrar Banner', 'solwed-wp'); ?></th>
                             <td>
                                 <label class="solwed-switch">
                                     <input type="checkbox" name="banner_enabled" value="1" <?php checked($banner_enabled); ?>>
                                     <span class="solwed-slider"></span>
                                 </label>
-                                <p class="description"><?php _e('Activa o desactiva el banner inferior del sitio.', 'solwed-wp'); ?></p>
+                                <p class="description"><?php esc_html_e('Activa o desactiva el banner inferior del sitio.', 'solwed-wp'); ?></p>
                             </td>
                         </tr>
                         <tr>
-                            <th scope="row"><?php _e('Texto del Banner', 'solwed-wp'); ?></th>
+                            <th scope="row"><?php esc_html_e('Texto del Banner', 'solwed-wp'); ?></th>
                             <td>
                                 <input type="text" name="banner_text" 
                                        value="<?php echo esc_attr($banner_settings['text']); ?>" class="regular-text"
-                                       placeholder="<?php esc_attr_e('Desarrollo Web Profesional', 'solwed-wp'); ?>">
-                                <p class="description"><?php _e('Personaliza el texto que aparece en el banner.', 'solwed-wp'); ?></p>
+                                       placeholder="<?php esc_attresc_html_e('Desarrollo Web Profesional', 'solwed-wp'); ?>">
+                                <p class="description"><?php esc_html_e('Personaliza el texto que aparece en el banner.', 'solwed-wp'); ?></p>
                             </td>
                         </tr>
                         <tr>
-                            <th scope="row"><?php _e('URL de la Empresa', 'solwed-wp'); ?></th>
+                            <th scope="row"><?php esc_html_e('URL de la Empresa', 'solwed-wp'); ?></th>
                             <td>
                                 <input type="url" name="banner_company_url" 
                                        value="<?php echo esc_attr($banner_settings['company_url']); ?>" class="regular-text"
-                                       placeholder="<?php esc_attr_e('https://tuempresa.com', 'solwed-wp'); ?>">
-                                <p class="description"><?php _e('URL de la empresa del diseñador (opcional). El texto del banner será un enlace a esta URL.', 'solwed-wp'); ?></p>
+                                       placeholder="<?php esc_attresc_html_e('https://tuempresa.com', 'solwed-wp'); ?>">
+                                <p class="description"><?php esc_html_e('URL de la empresa del diseñador (opcional). El texto del banner será un enlace a esta URL.', 'solwed-wp'); ?></p>
                             </td>
                         </tr>
                         <tr>
-                            <th scope="row"><?php _e('Color del Texto', 'solwed-wp'); ?></th>
+                            <th scope="row"><?php esc_html_e('Color del Texto', 'solwed-wp'); ?></th>
                             <td>
                                 <input type="color" name="banner_text_color" 
                                        value="<?php echo esc_attr($banner_settings['text_color']); ?>" class="solwed-color-picker">
                                 <input type="text" name="banner_text_color_hex" 
                                        value="<?php echo esc_attr($banner_settings['text_color']); ?>" class="regular-text solwed-color-input" 
                                        placeholder="#ffffff">
-                                <p class="description"><?php _e('Color del texto del banner. Usa el selector o introduce un código hexadecimal.', 'solwed-wp'); ?></p>
+                                <p class="description"><?php esc_html_e('Color del texto del banner. Usa el selector o introduce un código hexadecimal.', 'solwed-wp'); ?></p>
                             </td>
                         </tr>
                         <tr>
-                            <th scope="row"><?php _e('Color de Fondo', 'solwed-wp'); ?></th>
+                            <th scope="row"><?php esc_html_e('Color de Fondo', 'solwed-wp'); ?></th>
                             <td>
                                 <input type="color" name="banner_background_color" 
                                        value="<?php echo esc_attr($banner_settings['bg_color']); ?>" class="solwed-color-picker">
                                 <input type="text" name="banner_background_color_hex" 
                                        value="<?php echo esc_attr($banner_settings['bg_color']); ?>" class="regular-text solwed-color-input" 
                                        placeholder="#2E3536">
-                                <p class="description"><?php _e('Color de fondo del banner. Usa el selector o introduce un código hexadecimal.', 'solwed-wp'); ?></p>
+                                <p class="description"><?php esc_html_e('Color de fondo del banner. Usa el selector o introduce un código hexadecimal.', 'solwed-wp'); ?></p>
                             </td>
                         </tr>
                         <tr>
-                            <th scope="row"><?php _e('Posición del Banner', 'solwed-wp'); ?></th>
+                            <th scope="row"><?php esc_html_e('Posición del Banner', 'solwed-wp'); ?></th>
                             <td>
                                 <select name="banner_position">
-                                    <option value="bottom" <?php selected($banner_settings['position'], 'bottom'); ?>><?php _e('Parte Inferior', 'solwed-wp'); ?></option>
-                                    <option value="top" <?php selected($banner_settings['position'], 'top'); ?>><?php _e('Parte Superior', 'solwed-wp'); ?></option>
+                                    <option value="bottom" <?php selected($banner_settings['position'], 'bottom'); ?>><?php esc_html_e('Parte Inferior', 'solwed-wp'); ?></option>
+                                    <option value="top" <?php selected($banner_settings['position'], 'top'); ?>><?php esc_html_e('Parte Superior', 'solwed-wp'); ?></option>
                                 </select>
-                                <p class="description"><?php _e('Posición donde aparecerá el banner en el sitio web.', 'solwed-wp'); ?></p>
+                                <p class="description"><?php esc_html_e('Posición donde aparecerá el banner en el sitio web.', 'solwed-wp'); ?></p>
                             </td>
                         </tr>
                         <tr>
-                            <th scope="row"><?php _e('Animación', 'solwed-wp'); ?></th>
+                            <th scope="row"><?php esc_html_e('Animación', 'solwed-wp'); ?></th>
                             <td>
                                 <select name="banner_animation">
-                                    <option value="none" <?php selected($banner_settings['animation'], 'none'); ?>><?php _e('Sin animación', 'solwed-wp'); ?></option>
-                                    <option value="fade" <?php selected($banner_settings['animation'], 'fade'); ?>><?php _e('Desvanecimiento', 'solwed-wp'); ?></option>
-                                    <option value="slide" <?php selected($banner_settings['animation'], 'slide'); ?>><?php _e('Deslizamiento', 'solwed-wp'); ?></option>
-                                    <option value="bounce" <?php selected($banner_settings['animation'], 'bounce'); ?>><?php _e('Rebote', 'solwed-wp'); ?></option>
+                                    <option value="none" <?php selected($banner_settings['animation'], 'none'); ?>><?php esc_html_e('Sin animación', 'solwed-wp'); ?></option>
+                                    <option value="fade" <?php selected($banner_settings['animation'], 'fade'); ?>><?php esc_html_e('Desvanecimiento', 'solwed-wp'); ?></option>
+                                    <option value="slide" <?php selected($banner_settings['animation'], 'slide'); ?>><?php esc_html_e('Deslizamiento', 'solwed-wp'); ?></option>
+                                    <option value="bounce" <?php selected($banner_settings['animation'], 'bounce'); ?>><?php esc_html_e('Rebote', 'solwed-wp'); ?></option>
                                 </select>
-                                <p class="description"><?php _e('Tipo de animación para mostrar el banner.', 'solwed-wp'); ?></p>
+                                <p class="description"><?php esc_html_e('Tipo de animación para mostrar el banner.', 'solwed-wp'); ?></p>
                             </td>
                         </tr>
                     </table>
 
                     <?php if ($banner_enabled): ?>
                     <div class="solwed-preview">
-                        <h3><?php _e('Vista previa del banner:', 'solwed-wp'); ?></h3>
+                        <h3><?php esc_html_e('Vista previa del banner:', 'solwed-wp'); ?></h3>
                         <div class="solwed-banner-preview">
-                            <?php echo $appearance->get_banner_html(true); ?>
+                            <?php echo wp_kses_post($appearance->get_banner_html(true)); ?>
                             <p class="description" style="margin-top: 10px;">
-                                <strong><?php _e('Nota:', 'solwed-wp'); ?></strong> <?php _e('Esta vista previa muestra cómo se verá el banner en el sitio web. Se usa la fuente Orbitron con peso ligero para un aspecto moderno.', 'solwed-wp'); ?>
+                                <strong><?php esc_html_e('Nota:', 'solwed-wp'); ?></strong> <?php esc_html_e('Esta vista previa muestra cómo se verá el banner en el sitio web. Se usa la fuente Orbitron con peso ligero para un aspecto moderno.', 'solwed-wp'); ?>
                             </p>
                         </div>
                     </div>
@@ -345,20 +424,20 @@ function render_appearance_tab() {
         <!-- PANEL DE ESTADÍSTICAS (Derecha) -->
         <div class="solwed-appearance-sidebar">
             <div class="solwed-sidebar-panel solwed-panel">
-                <h3><?php _e('📊 Estado del Banner', 'solwed-wp'); ?></h3>
+                <h3><?php esc_html_e('📊 Estado del Banner', 'solwed-wp'); ?></h3>
                 <div class="solwed-stats-info">
-                    <p><strong><?php _e('Estado:', 'solwed-wp'); ?></strong> 
+                    <p><strong><?php esc_html_e('Estado:', 'solwed-wp'); ?></strong> 
                         <span class="solwed-status-badge <?php echo $banner_enabled ? 'sent' : 'failed'; ?>">
-                            <?php echo $banner_enabled ? __('Activo', 'solwed-wp') : __('Inactivo', 'solwed-wp'); ?>
+                            <?php echo $banner_enabled ? esc_html(__('Activo', 'solwed-wp')) : esc_html(__('Inactivo', 'solwed-wp')); ?>
                         </span>
                     </p>
-                    <p><strong><?php _e('Posición:', 'solwed-wp'); ?></strong> <?php echo ucfirst($banner_settings['position']); ?></p>
-                    <p><strong><?php _e('Animación:', 'solwed-wp'); ?></strong> <?php echo ucfirst($banner_settings['animation']); ?></p>
-                    <p><strong><?php _e('Color de Fondo:', 'solwed-wp'); ?></strong> 
+                    <p><strong><?php esc_html_e('Posición:', 'solwed-wp'); ?></strong> <?php echo esc_html(ucfirst($banner_settings['position'])); ?></p>
+                    <p><strong><?php esc_html_e('Animación:', 'solwed-wp'); ?></strong> <?php echo esc_html(ucfirst($banner_settings['animation'])); ?></p>
+                    <p><strong><?php esc_html_e('Color de Fondo:', 'solwed-wp'); ?></strong> 
                         <span style="display: inline-block; width: 20px; height: 20px; background: <?php echo esc_attr($banner_settings['bg_color']); ?>; border: 1px solid #ddd; vertical-align: middle;"></span>
                         <?php echo esc_html($banner_settings['bg_color']); ?>
                     </p>
-                    <p><strong><?php _e('Color de Texto:', 'solwed-wp'); ?></strong> 
+                    <p><strong><?php esc_html_e('Color de Texto:', 'solwed-wp'); ?></strong> 
                         <span style="display: inline-block; width: 20px; height: 20px; background: <?php echo esc_attr($banner_settings['text_color']); ?>; border: 1px solid #ddd; vertical-align: middle;"></span>
                         <?php echo esc_html($banner_settings['text_color']); ?>
                     </p>
@@ -366,18 +445,18 @@ function render_appearance_tab() {
             </div>
 
             <div class="solwed-sidebar-panel solwed-panel">
-                <h3><?php _e('🎯 Consejos de Apariencia', 'solwed-wp'); ?></h3>
+                <h3><?php esc_html_e('🎯 Consejos de Apariencia', 'solwed-wp'); ?></h3>
                 <ul style="padding-left: 20px; line-height: 1.6;">
-                    <li><?php _e('Use colores contrastantes para mejor legibilidad', 'solwed-wp'); ?></li>
-                    <li><?php _e('La fuente Orbitron proporciona un aspecto moderno y profesional', 'solwed-wp'); ?></li>
-                    <li><?php _e('Las animaciones sutiles mejoran la experiencia del usuario', 'solwed-wp'); ?></li>
-                    <li><?php _e('La posición inferior es menos intrusiva para el contenido', 'solwed-wp'); ?></li>
+                    <li><?php esc_html_e('Use colores contrastantes para mejor legibilidad', 'solwed-wp'); ?></li>
+                    <li><?php esc_html_e('La fuente Orbitron proporciona un aspecto moderno y profesional', 'solwed-wp'); ?></li>
+                    <li><?php esc_html_e('Las animaciones sutiles mejoran la experiencia del usuario', 'solwed-wp'); ?></li>
+                    <li><?php esc_html_e('La posición inferior es menos intrusiva para el contenido', 'solwed-wp'); ?></li>
                 </ul>
             </div>
 
             <?php if (!empty($banner_settings['company_url'])): ?>
             <div class="solwed-sidebar-panel solwed-panel">
-                <h3><?php _e('🔗 URL de la Empresa', 'solwed-wp'); ?></h3>
+                <h3><?php esc_html_e('🔗 URL de la Empresa', 'solwed-wp'); ?></h3>
                 <p><a href="<?php echo esc_url($banner_settings['company_url']); ?>" target="_blank" rel="noopener">
                     <?php echo esc_html($banner_settings['company_url']); ?>
                 </a></p>

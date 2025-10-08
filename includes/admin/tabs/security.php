@@ -62,7 +62,9 @@ class Solwed_Security_Unified {
         }
 
         // Obtener la URL actual y convertirla a HTTPS
-        $redirect_url = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+        $http_host = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
+        $request_uri = isset($_SERVER['REQUEST_URI']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])) : '';
+        $redirect_url = 'https://' . $http_host . $request_uri;
         
         // Redirección permanente (301)
         wp_redirect($redirect_url, 301);
@@ -143,7 +145,7 @@ class Solwed_Security_Unified {
         
         foreach ($ip_keys as $key) {
             if (!empty($_SERVER[$key])) {
-                $ip = $_SERVER[$key];
+                $ip = sanitize_text_field(wp_unslash($_SERVER[$key]));
                 if (strpos($ip, ',') !== false) {
                     $ip = trim(explode(',', $ip)[0]);
                 }
@@ -153,7 +155,7 @@ class Solwed_Security_Unified {
             }
         }
         
-        return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        return isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '0.0.0.0';
     }
 
     public function get_stats(): array {
@@ -165,12 +167,13 @@ class Solwed_Security_Unified {
             'recent_lockouts' => []
         ];
 
-        if ($wpdb->get_var("SHOW TABLES LIKE '{$wpdb->prefix}solwed_blocked_ips'")) {
+        if ($wpdb->get_var("SHOW TABLES LIKE '{$wpdb->prefix}solwed_blocked_ips'")) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
             $stats['current_lockouts'] = $wpdb->get_var(
-                "SELECT COUNT(*) FROM {$wpdb->prefix}solwed_blocked_ips WHERE blocked_until > NOW()"
+                "SELECT COUNT(*) FROM {$wpdb->prefix}solwed_blocked_ips WHERE blocked_until > NOW()" // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
             );
             
             $stats['recent_lockouts'] = $wpdb->get_results(
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct query needed for security display
                 "SELECT ip_address, blocked_at as lockout_time FROM {$wpdb->prefix}solwed_blocked_ips 
                  ORDER BY blocked_at DESC LIMIT 10"
             );
@@ -225,41 +228,41 @@ function render_security_tab() {
                 <input type="hidden" name="solwed_action" value="save_security">
                 
                 <div class="solwed-form-section">
-                    <h2><?php _e('🔒 Control de Intentos de Login', 'solwed-wp'); ?></h2>
-                    <p class="description"><?php _e('Protege tu sitio web limitando los intentos fallidos de login.', 'solwed-wp'); ?></p>
+                    <h2><?php esc_html_e('🔒 Control de Intentos de Login', 'solwed-wp'); ?></h2>
+                    <p class="description"><?php esc_html_e('Protege tu sitio web limitando los intentos fallidos de login.', 'solwed-wp'); ?></p>
                     
                     <table class="form-table">
                         <tr>
-                            <th scope="row"><?php _e('Activar Protección', 'solwed-wp'); ?></th>
+                            <th scope="row"><?php esc_html_e('Activar Protección', 'solwed-wp'); ?></th>
                             <td>
                                 <label class="solwed-switch">
                                     <input type="checkbox" name="security_enabled" value="1" <?php checked($security_enabled); ?>>
                                     <span class="solwed-slider"></span>
                                 </label>
-                                <p class="description"><?php _e('Activa la protección contra intentos de login masivos.', 'solwed-wp'); ?></p>
+                                <p class="description"><?php esc_html_e('Activa la protección contra intentos de login masivos.', 'solwed-wp'); ?></p>
                             </td>
                         </tr>
                         <tr>
-                            <th scope="row"><?php _e('Máximo Intentos', 'solwed-wp'); ?></th>
+                            <th scope="row"><?php esc_html_e('Máximo Intentos', 'solwed-wp'); ?></th>
                             <td>
                                 <input type="number" name="max_login_attempts" 
                                        value="<?php echo esc_attr($security_settings['max_attempts']); ?>" 
                                        min="1" max="10" class="small-text">
-                                <p class="description"><?php _e('Número máximo de intentos fallidos antes del bloqueo (recomendado: 3).', 'solwed-wp'); ?></p>
+                                <p class="description"><?php esc_html_e('Número máximo de intentos fallidos antes del bloqueo (recomendado: 3).', 'solwed-wp'); ?></p>
                             </td>
                         </tr>
                         <tr>
-                            <th scope="row"><?php _e('Duración del Bloqueo', 'solwed-wp'); ?></th>
+                            <th scope="row"><?php esc_html_e('Duración del Bloqueo', 'solwed-wp'); ?></th>
                             <td>
                                 <select name="lockout_duration">
-                                    <option value="900" <?php selected($security_settings['lockout_duration'], 900); ?>>15 <?php _e('minutos', 'solwed-wp'); ?></option>
-                                    <option value="1800" <?php selected($security_settings['lockout_duration'], 1800); ?>>30 <?php _e('minutos', 'solwed-wp'); ?></option>
-                                    <option value="3600" <?php selected($security_settings['lockout_duration'], 3600); ?>>1 <?php _e('hora', 'solwed-wp'); ?></option>
-                                    <option value="7200" <?php selected($security_settings['lockout_duration'], 7200); ?>>2 <?php _e('horas', 'solwed-wp'); ?></option>
-                                    <option value="21600" <?php selected($security_settings['lockout_duration'], 21600); ?>>6 <?php _e('horas', 'solwed-wp'); ?></option>
-                                    <option value="86400" <?php selected($security_settings['lockout_duration'], 86400); ?>>24 <?php _e('horas', 'solwed-wp'); ?></option>
+                                    <option value="900" <?php selected($security_settings['lockout_duration'], 900); ?>>15 <?php esc_html_e('minutos', 'solwed-wp'); ?></option>
+                                    <option value="1800" <?php selected($security_settings['lockout_duration'], 1800); ?>>30 <?php esc_html_e('minutos', 'solwed-wp'); ?></option>
+                                    <option value="3600" <?php selected($security_settings['lockout_duration'], 3600); ?>>1 <?php esc_html_e('hora', 'solwed-wp'); ?></option>
+                                    <option value="7200" <?php selected($security_settings['lockout_duration'], 7200); ?>>2 <?php esc_html_e('horas', 'solwed-wp'); ?></option>
+                                    <option value="21600" <?php selected($security_settings['lockout_duration'], 21600); ?>>6 <?php esc_html_e('horas', 'solwed-wp'); ?></option>
+                                    <option value="86400" <?php selected($security_settings['lockout_duration'], 86400); ?>>24 <?php esc_html_e('horas', 'solwed-wp'); ?></option>
                                 </select>
-                                <p class="description"><?php _e('Tiempo que permanecerá bloqueada una IP tras superar el límite.', 'solwed-wp'); ?></p>
+                                <p class="description"><?php esc_html_e('Tiempo que permanecerá bloqueada una IP tras superar el límite.', 'solwed-wp'); ?></p>
                             </td>
                         </tr>
                     </table>
@@ -267,23 +270,23 @@ function render_security_tab() {
 
                 <!-- Sección de SSL/HTTPS -->
                 <div class="solwed-form-section">
-                    <h2><?php _e('🔐 SSL/HTTPS', 'solwed-wp'); ?></h2>
-                    <p class="description"><?php _e('Fuerza el uso de HTTPS en todo tu sitio web para mayor seguridad.', 'solwed-wp'); ?></p>
+                    <h2><?php esc_html_e('🔐 SSL/HTTPS', 'solwed-wp'); ?></h2>
+                    <p class="description"><?php esc_html_e('Fuerza el uso de HTTPS en todo tu sitio web para mayor seguridad.', 'solwed-wp'); ?></p>
                     
                     <table class="form-table">
                         <tr>
-                            <th scope="row"><?php _e('Forzar SSL en todo el sitio', 'solwed-wp'); ?></th>
+                            <th scope="row"><?php esc_html_e('Forzar SSL en todo el sitio', 'solwed-wp'); ?></th>
                             <td>
                                 <label class="solwed-switch">
                                     <input type="checkbox" name="force_ssl" value="1" <?php checked($security_settings['force_ssl'], '1'); ?>>
                                     <span class="solwed-slider"></span>
                                 </label>
                                 <p class="description">
-                                    <?php _e('Redirige automáticamente todas las páginas HTTP a HTTPS (redirección 301).', 'solwed-wp'); ?>
+                                    <?php esc_html_e('Redirige automáticamente todas las páginas HTTP a HTTPS (redirección 301).', 'solwed-wp'); ?>
                                     <?php if ($security_settings['force_ssl'] === '1'): ?>
-                                        <br><strong style="color: #46B450;"><?php _e('✓ SSL forzado está activo', 'solwed-wp'); ?></strong>
+                                        <br><strong style="color: #46B450;"><?php esc_html_e('✓ SSL forzado está activo', 'solwed-wp'); ?></strong>
                                     <?php else: ?>
-                                        <br><strong style="color: #d63638;"><?php _e('⚠ SSL no está forzado', 'solwed-wp'); ?></strong>
+                                        <br><strong style="color: #d63638;"><?php esc_html_e('⚠ SSL no está forzado', 'solwed-wp'); ?></strong>
                                     <?php endif; ?>
                                 </p>
                             </td>
@@ -293,35 +296,35 @@ function render_security_tab() {
 
                 <!-- Sección de Login Personalizado -->
                 <div class="solwed-form-section">
-                    <h2><?php _e('🚪 URL de Login Personalizada', 'solwed-wp'); ?></h2>
-                    <p class="description"><?php _e('Personaliza la URL de acceso al login. Cuando está activa, /wp-admin y /wp-login.php serán inaccesibles.', 'solwed-wp'); ?></p>
+                    <h2><?php esc_html_e('🚪 URL de Login Personalizada', 'solwed-wp'); ?></h2>
+                    <p class="description"><?php esc_html_e('Personaliza la URL de acceso al login. Cuando está activa, /wp-admin y /wp-login.php serán inaccesibles.', 'solwed-wp'); ?></p>
                     
                     <table class="form-table">
                         <tr>
-                            <th scope="row"><?php _e('Activar URL Personalizada', 'solwed-wp'); ?></th>
+                            <th scope="row"><?php esc_html_e('Activar URL Personalizada', 'solwed-wp'); ?></th>
                             <td>
                                 <label class="solwed-switch">
                                     <input type="checkbox" name="enable_custom_login" value="1" <?php checked($security_settings['enable_custom_login'], '1'); ?>>
                                     <span class="solwed-slider"></span>
                                 </label>
-                                <p class="description"><?php _e('Cuando está activa, solo se podrá acceder al login a través de la URL personalizada.', 'solwed-wp'); ?></p>
+                                <p class="description"><?php esc_html_e('Cuando está activa, solo se podrá acceder al login a través de la URL personalizada.', 'solwed-wp'); ?></p>
                             </td>
                         </tr>
                         <tr>
-                            <th scope="row"><?php _e('URL Personalizada', 'solwed-wp'); ?></th>
+                            <th scope="row"><?php esc_html_e('URL Personalizada', 'solwed-wp'); ?></th>
                             <td>
                                 <input type="text" name="custom_login_url" 
                                        value="<?php echo esc_attr($security_settings['custom_login_url']); ?>" 
                                        class="regular-text" placeholder="login">
                                 <p class="description">
-                                    <?php _e('URL personalizada para acceder al login (solo la parte final, sin /).', 'solwed-wp'); ?>
+                                    <?php esc_html_e('URL personalizada para acceder al login (solo la parte final, sin /).', 'solwed-wp'); ?>
                                     <?php if ($security_settings['enable_custom_login']): ?>
-                                        <br><strong style="color: #2271b1;"><?php _e('URL activa:', 'solwed-wp'); ?></strong> 
+                                        <br><strong style="color: #2271b1;"><?php esc_html_e('URL activa:', 'solwed-wp'); ?></strong> 
                                         <a href="<?php echo esc_url(home_url($security_settings['custom_login_url'])); ?>" target="_blank">
                                             <?php echo esc_url(home_url($security_settings['custom_login_url'])); ?>
                                         </a>
-                                        <br><strong style="color: #d63638;"><?php _e('Importante:', 'solwed-wp'); ?></strong> 
-                                        <em><?php _e('/wp-admin y /wp-login.php estarán inaccesibles', 'solwed-wp'); ?></em>
+                                        <br><strong style="color: #d63638;"><?php esc_html_e('Importante:', 'solwed-wp'); ?></strong> 
+                                        <em><?php esc_html_e('/wp-admin y /wp-login.php estarán inaccesibles', 'solwed-wp'); ?></em>
                                     <?php endif; ?>
                                 </p>
                             </td>
@@ -331,25 +334,25 @@ function render_security_tab() {
 
                 <!-- Sección de SVG Upload -->
                 <div class="solwed-form-section">
-                    <h2><?php _e('📁 Soporte para Archivos SVG', 'solwed-wp'); ?></h2>
-                    <p class="description"><?php _e('Permite la subida de archivos SVG a la biblioteca de medios de WordPress.', 'solwed-wp'); ?></p>
+                    <h2><?php esc_html_e('📁 Soporte para Archivos SVG', 'solwed-wp'); ?></h2>
+                    <p class="description"><?php esc_html_e('Permite la subida de archivos SVG a la biblioteca de medios de WordPress.', 'solwed-wp'); ?></p>
                     
                     <table class="form-table">
                         <tr>
-                            <th scope="row"><?php _e('Habilitar subida de SVG', 'solwed-wp'); ?></th>
+                            <th scope="row"><?php esc_html_e('Habilitar subida de SVG', 'solwed-wp'); ?></th>
                             <td>
                                 <label class="solwed-switch">
                                     <input type="checkbox" name="enable_svg_upload" value="1" <?php checked($security_settings['enable_svg_upload'], '1'); ?>>
                                     <span class="solwed-slider"></span>
                                 </label>
                                 <p class="description">
-                                    <?php _e('Permite subir archivos SVG a la biblioteca de medios de WordPress.', 'solwed-wp'); ?>
+                                    <?php esc_html_e('Permite subir archivos SVG a la biblioteca de medios de WordPress.', 'solwed-wp'); ?>
                                     <?php if ($security_settings['enable_svg_upload'] === '1'): ?>
-                                        <br><strong style="color: #46B450;"><?php _e('✓ Subida de SVG habilitada', 'solwed-wp'); ?></strong>
+                                        <br><strong style="color: #46B450;"><?php esc_html_e('✓ Subida de SVG habilitada', 'solwed-wp'); ?></strong>
                                     <?php else: ?>
-                                        <br><strong style="color: #d63638;"><?php _e('⚠ Subida de SVG deshabilitada', 'solwed-wp'); ?></strong>
+                                        <br><strong style="color: #d63638;"><?php esc_html_e('⚠ Subida de SVG deshabilitada', 'solwed-wp'); ?></strong>
                                     <?php endif; ?>
-                                    <br><em style="color: #666;"><?php _e('Nota: Los archivos SVG pueden contener código JavaScript. Use solo archivos de fuentes confiables.', 'solwed-wp'); ?></em>
+                                    <br><em style="color: #666;"><?php esc_html_e('Nota: Los archivos SVG pueden contener código JavaScript. Use solo archivos de fuentes confiables.', 'solwed-wp'); ?></em>
                                 </p>
                             </td>
                         </tr>
@@ -365,46 +368,46 @@ function render_security_tab() {
         <!-- PANEL DE ESTADÍSTICAS (Derecha) -->
         <div class="solwed-security-sidebar">
             <div class="solwed-sidebar-panel solwed-panel">
-                <h3><?php _e('🛡️ Estado de Seguridad', 'solwed-wp'); ?></h3>
+                <h3><?php esc_html_e('🛡️ Estado de Seguridad', 'solwed-wp'); ?></h3>
                 <div class="solwed-stats-info">
-                    <p><strong><?php _e('Protección Login:', 'solwed-wp'); ?></strong> 
+                    <p><strong><?php esc_html_e('Protección Login:', 'solwed-wp'); ?></strong> 
                         <span class="solwed-status-badge <?php echo $security_enabled ? 'sent' : 'failed'; ?>">
-                            <?php echo $security_enabled ? __('Activa', 'solwed-wp') : __('Inactiva', 'solwed-wp'); ?>
+                            <?php echo $security_enabled ? esc_html(__('Activa', 'solwed-wp')) : esc_html(__('Inactiva', 'solwed-wp')); ?>
                         </span>
                     </p>
-                    <p><strong><?php _e('SSL Forzado:', 'solwed-wp'); ?></strong> 
+                    <p><strong><?php esc_html_e('SSL Forzado:', 'solwed-wp'); ?></strong> 
                         <span class="solwed-status-badge <?php echo ($security_settings['force_ssl'] === '1') ? 'sent' : 'failed'; ?>">
-                            <?php echo ($security_settings['force_ssl'] === '1') ? __('Activo', 'solwed-wp') : __('Inactivo', 'solwed-wp'); ?>
+                            <?php echo ($security_settings['force_ssl'] === '1') ? esc_html(__('Activo', 'solwed-wp')) : esc_html(__('Inactivo', 'solwed-wp')); ?>
                         </span>
                     </p>
-                    <p><strong><?php _e('Login Personalizado:', 'solwed-wp'); ?></strong> 
+                    <p><strong><?php esc_html_e('Login Personalizado:', 'solwed-wp'); ?></strong> 
                         <span class="solwed-status-badge <?php echo ($security_settings['enable_custom_login'] === '1') ? 'sent' : 'failed'; ?>">
-                            <?php echo ($security_settings['enable_custom_login'] === '1') ? __('Activo', 'solwed-wp') : __('Inactivo', 'solwed-wp'); ?>
+                            <?php echo ($security_settings['enable_custom_login'] === '1') ? esc_html(__('Activo', 'solwed-wp')) : esc_html(__('Inactivo', 'solwed-wp')); ?>
                         </span>
                     </p>
-                    <p><strong><?php _e('Subida SVG:', 'solwed-wp'); ?></strong> 
+                    <p><strong><?php esc_html_e('Subida SVG:', 'solwed-wp'); ?></strong> 
                         <span class="solwed-status-badge <?php echo ($security_settings['enable_svg_upload'] === '1') ? 'sent' : 'failed'; ?>">
-                            <?php echo ($security_settings['enable_svg_upload'] === '1') ? __('Habilitada', 'solwed-wp') : __('Deshabilitada', 'solwed-wp'); ?>
+                            <?php echo ($security_settings['enable_svg_upload'] === '1') ? esc_html(__('Habilitada', 'solwed-wp')) : esc_html(__('Deshabilitada', 'solwed-wp')); ?>
                         </span>
                     </p>
-                    <p><strong><?php _e('Máx. Intentos:', 'solwed-wp'); ?></strong> <?php echo esc_html($security_settings['max_attempts']); ?></p>
-                    <p><strong><?php _e('Duración Bloqueo:', 'solwed-wp'); ?></strong> <?php echo esc_html(human_time_diff(0, $security_settings['lockout_duration'])); ?></p>
+                    <p><strong><?php esc_html_e('Máx. Intentos:', 'solwed-wp'); ?></strong> <?php echo esc_html($security_settings['max_attempts']); ?></p>
+                    <p><strong><?php esc_html_e('Duración Bloqueo:', 'solwed-wp'); ?></strong> <?php echo esc_html(human_time_diff(0, $security_settings['lockout_duration'])); ?></p>
                 </div>
             </div>
 
             <?php if ($security_enabled && !empty($stats)): ?>
             <div class="solwed-sidebar-panel solwed-panel">
-                <h3><?php _e('📊 Estadísticas', 'solwed-wp'); ?></h3>
+                <h3><?php esc_html_e('📊 Estadísticas', 'solwed-wp'); ?></h3>
                 <div class="solwed-stats-info">
-                    <p><strong><?php _e('Intentos Fallidos:', 'solwed-wp'); ?></strong> <?php echo esc_html($stats['total_failed_attempts'] ?? 0); ?></p>
-                    <p><strong><?php _e('IPs Bloqueadas:', 'solwed-wp'); ?></strong> <?php echo esc_html($stats['current_lockouts'] ?? 0); ?></p>
+                    <p><strong><?php esc_html_e('Intentos Fallidos:', 'solwed-wp'); ?></strong> <?php echo esc_html($stats['total_failed_attempts'] ?? 0); ?></p>
+                    <p><strong><?php esc_html_e('IPs Bloqueadas:', 'solwed-wp'); ?></strong> <?php echo esc_html($stats['current_lockouts'] ?? 0); ?></p>
                     <?php if (!empty($stats['recent_lockouts'])): ?>
-                        <p><strong><?php _e('Bloqueos Recientes:', 'solwed-wp'); ?></strong> <?php echo count($stats['recent_lockouts']); ?></p>
+                        <p><strong><?php esc_html_e('Bloqueos Recientes:', 'solwed-wp'); ?></strong> <?php echo count($stats['recent_lockouts']); ?></p>
                     <?php endif; ?>
                 </div>
                 
                 <?php if (!empty($stats['recent_lockouts'])): ?>
-                <h4><?php _e('IPs Bloqueadas Recientemente:', 'solwed-wp'); ?></h4>
+                <h4><?php esc_html_e('IPs Bloqueadas Recientemente:', 'solwed-wp'); ?></h4>
                 <div style="max-height: 200px; overflow-y: auto; font-size: 11px;">
                     <?php foreach (array_slice($stats['recent_lockouts'], 0, 10) as $lockout): ?>
                     <div style="padding: 5px 0; border-bottom: 1px solid #eee;">
@@ -421,27 +424,27 @@ function render_security_tab() {
             <?php endif; ?>
 
             <div class="solwed-sidebar-panel solwed-panel">
-                <h3><?php _e('🔧 Recomendaciones', 'solwed-wp'); ?></h3>
+                <h3><?php esc_html_e('🔧 Recomendaciones', 'solwed-wp'); ?></h3>
                 <ul style="padding-left: 20px; line-height: 1.6;">
-                    <li><?php _e('Use SSL/HTTPS siempre para mayor seguridad', 'solwed-wp'); ?></li>
-                    <li><?php _e('Mantenga 3 intentos máximos para balance usabilidad-seguridad', 'solwed-wp'); ?></li>
-                    <li><?php _e('El login personalizado oculta las URLs estándar de WordPress', 'solwed-wp'); ?></li>
-                    <li><?php _e('Los archivos SVG solo de fuentes confiables (pueden contener JavaScript)', 'solwed-wp'); ?></li>
-                    <li><?php _e('Monitoree regularmente las estadísticas de bloqueos', 'solwed-wp'); ?></li>
+                    <li><?php esc_html_e('Use SSL/HTTPS siempre para mayor seguridad', 'solwed-wp'); ?></li>
+                    <li><?php esc_html_e('Mantenga 3 intentos máximos para balance usabilidad-seguridad', 'solwed-wp'); ?></li>
+                    <li><?php esc_html_e('El login personalizado oculta las URLs estándar de WordPress', 'solwed-wp'); ?></li>
+                    <li><?php esc_html_e('Los archivos SVG solo de fuentes confiables (pueden contener JavaScript)', 'solwed-wp'); ?></li>
+                    <li><?php esc_html_e('Monitoree regularmente las estadísticas de bloqueos', 'solwed-wp'); ?></li>
                 </ul>
             </div>
 
             <?php if ($security_settings['enable_custom_login'] === '1'): ?>
             <div class="solwed-sidebar-panel solwed-panel" style="border-left: 4px solid #d63638;">
-                <h3><?php _e('⚠️ URL Login Activa', 'solwed-wp'); ?></h3>
+                <h3><?php esc_html_e('⚠️ URL Login Activa', 'solwed-wp'); ?></h3>
                 <p style="font-size: 12px; line-height: 1.4;">
-                    <strong><?php _e('URL Personalizada:', 'solwed-wp'); ?></strong><br>
+                    <strong><?php esc_html_e('URL Personalizada:', 'solwed-wp'); ?></strong><br>
                     <a href="<?php echo esc_url(home_url($security_settings['custom_login_url'])); ?>" target="_blank" style="word-break: break-all;">
                         <?php echo esc_url(home_url($security_settings['custom_login_url'])); ?>
                     </a>
                 </p>
                 <p style="color: #d63638; font-size: 11px; margin: 10px 0 0 0;">
-                    <strong><?php _e('¡Importante!', 'solwed-wp'); ?></strong> <?php _e('Guarda esta URL en un lugar seguro. Las rutas estándar estarán inaccesibles.', 'solwed-wp'); ?>
+                    <strong><?php esc_html_e('¡Importante!', 'solwed-wp'); ?></strong> <?php esc_html_e('Guarda esta URL en un lugar seguro. Las rutas estándar estarán inaccesibles.', 'solwed-wp'); ?>
                 </p>
             </div>
             <?php endif; ?>

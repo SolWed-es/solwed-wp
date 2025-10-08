@@ -26,7 +26,7 @@ class Solwed_List_Table extends WP_List_Table {
 	}
 
 	public function no_items() {
-		_e( 'No hay registros disponibles.', 'solwed-wp' );
+		esc_html_e( 'No hay registros disponibles.', 'solwed-wp' );
 	}
 
 	public function get_columns() {
@@ -57,7 +57,7 @@ class Solwed_Current_Blocks_List_Table extends Solwed_List_Table {
 	}
 
 	public function no_items() {
-		_e( 'No hay bloqueos activos en este momento.', 'solwed-wp' );
+		esc_html_e( 'No hay bloqueos activos en este momento.', 'solwed-wp' );
 	}
 
 	public function get_columns() {
@@ -80,11 +80,11 @@ class Solwed_Current_Blocks_List_Table extends Solwed_List_Table {
 		$total_items           = 0;
 		$query                 = '';
 
-		if ( $wpdb->get_var( "SHOW TABLES LIKE '{$blocked_ips_table}'" ) === $blocked_ips_table ) {
-			$total_items = (int) $wpdb->get_var( "SELECT COUNT(id) FROM {$blocked_ips_table} WHERE blocked_until > NOW()" );
+		if ( $wpdb->get_var( "SHOW TABLES LIKE '{$blocked_ips_table}'" ) === $blocked_ips_table ) { // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			$total_items = (int) $wpdb->get_var( "SELECT COUNT(id) FROM {$blocked_ips_table} WHERE blocked_until > NOW()" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			$query       = "SELECT ip_address, blocked_until FROM {$blocked_ips_table} WHERE blocked_until > NOW() ORDER BY blocked_until DESC";
-		} elseif ( $wpdb->get_var( "SHOW TABLES LIKE '{$failed_attempts_table}'" ) === $failed_attempts_table ) {
-			$total_items = (int) $wpdb->get_var( "SELECT COUNT(id) FROM {$failed_attempts_table} WHERE blocked_until IS NOT NULL AND blocked_until > NOW()" );
+		} elseif ( $wpdb->get_var( "SHOW TABLES LIKE '{$failed_attempts_table}'" ) === $failed_attempts_table ) { // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			$total_items = (int) $wpdb->get_var( "SELECT COUNT(id) FROM {$failed_attempts_table} WHERE blocked_until IS NOT NULL AND blocked_until > NOW()" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			$query       = "SELECT ip_address, blocked_until FROM {$failed_attempts_table} WHERE blocked_until IS NOT NULL AND blocked_until > NOW() ORDER BY blocked_until DESC";
 		}
 
@@ -98,6 +98,7 @@ class Solwed_Current_Blocks_List_Table extends Solwed_List_Table {
 		$offset = ( $current_page - 1 ) * $per_page;
 
 		if ( $query ) {
+			// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct query needed for logs display
 			$this->items = $wpdb->get_results(
 				$wpdb->prepare( $query . ' LIMIT %d OFFSET %d', $per_page, $offset ),
 				ARRAY_A
@@ -147,7 +148,7 @@ class Solwed_Email_Logs_List_Table extends Solwed_List_Table {
 		$table_name            = $wpdb->prefix . 'solwed_email_logs';
 		$per_page              = 20;
 		$current_page          = $this->get_pagenum();
-		$total_items           = (int) $wpdb->get_var( "SELECT COUNT(id) FROM {$table_name}" );
+		$total_items           = (int) $wpdb->get_var( "SELECT COUNT(id) FROM {$table_name}" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
 		$this->set_pagination_args(
 			[
@@ -158,6 +159,7 @@ class Solwed_Email_Logs_List_Table extends Solwed_List_Table {
 
 		$offset = ( $current_page - 1 ) * $per_page;
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct query needed for logs display
 		$this->items = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT * FROM {$table_name} ORDER BY timestamp DESC LIMIT %d OFFSET %d",
@@ -223,7 +225,7 @@ class Solwed_Security_Logs_List_Table extends Solwed_List_Table {
 		$table_name            = $wpdb->prefix . 'solwed_security_logs';
 		$per_page              = 20;
 		$current_page          = $this->get_pagenum();
-		$total_items           = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(id) FROM {$table_name} WHERE action = %s", 'ip_blocked' ) );
+		$total_items           = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(id) FROM {$table_name} WHERE action = %s", 'ip_blocked' ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
 		$this->set_pagination_args(
 			[
@@ -234,6 +236,7 @@ class Solwed_Security_Logs_List_Table extends Solwed_List_Table {
 
 		$offset = ( $current_page - 1 ) * $per_page;
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct query needed for logs display
 		$this->items = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT ip_address, action, timestamp FROM {$table_name} WHERE action = %s ORDER BY timestamp DESC LIMIT %d OFFSET %d",
@@ -274,12 +277,12 @@ function render_logs_tab() {
 	$log_prefix = SOLWED_WP_PREFIX;
 	
 	$stats = [
-		'current_blocks' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}failed_attempts WHERE blocked_until > NOW()"),
-		'total_blocks' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}security_logs"),
-		'email_sent' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}email_logs WHERE status = 'sent'"),
-		'email_failed' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}email_logs WHERE status != 'sent'"),
-		'email_today' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}email_logs WHERE DATE(timestamp) = CURDATE()"),
-		'blocks_today' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}security_logs WHERE DATE(timestamp) = CURDATE()")
+		'current_blocks' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}failed_attempts WHERE blocked_until > NOW()"), // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		'total_blocks' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}security_logs"), // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		'email_sent' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}email_logs WHERE status = 'sent'"), // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		'email_failed' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}email_logs WHERE status != 'sent'"), // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		'email_today' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}email_logs WHERE DATE(timestamp) = CURDATE()"), // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		'blocks_today' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}security_logs WHERE DATE(timestamp) = CURDATE()") // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 	];
 	?>
 
@@ -317,26 +320,26 @@ function render_logs_tab() {
         <!-- CONTENIDO PRINCIPAL (Izquierda) -->
         <div class="solwed-logs-main">
             <div class="solwed-form-section">
-                <h2><?php _e( '📋 Registros del Sistema', 'solwed-wp' ); ?></h2>
-                <p class="description"><?php _e( 'Aquí puedes ver los registros de actividad del plugin, como envíos de email y bloqueos de seguridad.', 'solwed-wp' ); ?></p>
+                <h2><?php esc_html_e( '📋 Registros del Sistema', 'solwed-wp' ); ?></h2>
+                <p class="description"><?php esc_html_e( 'Aquí puedes ver los registros de actividad del plugin, como envíos de email y bloqueos de seguridad.', 'solwed-wp' ); ?></p>
             </div>
 
             <div class="solwed-log-section">
-                <h3><?php _e( '🚫 Bloqueos Vigentes', 'solwed-wp' ); ?></h3>
+                <h3><?php esc_html_e( '🚫 Bloqueos Vigentes', 'solwed-wp' ); ?></h3>
                 <form method="post">
                     <?php $current_blocks_table->display(); ?>
                 </form>
             </div>
 
             <div class="solwed-log-section">
-                <h3><?php _e( '📧 Registros de Email', 'solwed-wp' ); ?></h3>
+                <h3><?php esc_html_e( '📧 Registros de Email', 'solwed-wp' ); ?></h3>
                 <form method="post">
                     <?php $email_logs_table->display(); ?>
                 </form>
             </div>
 
             <div class="solwed-log-section">
-                <h3><?php _e( '🔒 Registros de Seguridad (Bloqueos)', 'solwed-wp' ); ?></h3>
+                <h3><?php esc_html_e( '🔒 Registros de Seguridad (Bloqueos)', 'solwed-wp' ); ?></h3>
                 <form method="post">
                     <?php $security_logs_table->display(); ?>
                 </form>
@@ -346,94 +349,94 @@ function render_logs_tab() {
         <!-- PANEL DE ESTADÍSTICAS (Derecha) -->
         <div class="solwed-logs-sidebar">
             <div class="solwed-sidebar-panel solwed-panel">
-                <h3><?php _e('📊 Resumen General', 'solwed-wp'); ?></h3>
+                <h3><?php esc_html_e('📊 Resumen General', 'solwed-wp'); ?></h3>
                 <div class="solwed-stats-info">
-                    <p><strong><?php _e('Bloqueos Activos:', 'solwed-wp'); ?></strong> 
+                    <p><strong><?php esc_html_e('Bloqueos Activos:', 'solwed-wp'); ?></strong> 
                         <span class="solwed-status-badge <?php echo ($stats['current_blocks'] > 0) ? 'failed' : 'sent'; ?>">
-                            <?php echo $stats['current_blocks']; ?>
+                            <?php echo esc_html($stats['current_blocks']); ?>
                         </span>
                     </p>
-                    <p><strong><?php _e('Total Bloqueos:', 'solwed-wp'); ?></strong> <?php echo $stats['total_blocks']; ?></p>
-                    <p><strong><?php _e('Emails Enviados:', 'solwed-wp'); ?></strong> 
-                        <span class="solwed-status-badge sent"><?php echo $stats['email_sent']; ?></span>
+                    <p><strong><?php esc_html_e('Total Bloqueos:', 'solwed-wp'); ?></strong> <?php echo esc_html($stats['total_blocks']); ?></p>
+                    <p><strong><?php esc_html_e('Emails Enviados:', 'solwed-wp'); ?></strong> 
+                        <span class="solwed-status-badge sent"><?php echo esc_html($stats['email_sent']); ?></span>
                     </p>
-                    <p><strong><?php _e('Emails Fallidos:', 'solwed-wp'); ?></strong> 
+                    <p><strong><?php esc_html_e('Emails Fallidos:', 'solwed-wp'); ?></strong> 
                         <span class="solwed-status-badge <?php echo ($stats['email_failed'] > 0) ? 'failed' : 'sent'; ?>">
-                            <?php echo $stats['email_failed']; ?>
+                            <?php echo esc_html($stats['email_failed']); ?>
                         </span>
                     </p>
                 </div>
             </div>
 
             <div class="solwed-sidebar-panel solwed-panel">
-                <h3><?php _e('📅 Actividad de Hoy', 'solwed-wp'); ?></h3>
+                <h3><?php esc_html_e('📅 Actividad de Hoy', 'solwed-wp'); ?></h3>
                 <div class="solwed-stats-info">
-                    <p><strong><?php _e('Emails Hoy:', 'solwed-wp'); ?></strong> 
+                    <p><strong><?php esc_html_e('Emails Hoy:', 'solwed-wp'); ?></strong> 
                         <span class="solwed-status-badge <?php echo ($stats['email_today'] > 0) ? 'sent' : 'failed'; ?>">
-                            <?php echo $stats['email_today']; ?>
+                            <?php echo esc_html($stats['email_today']); ?>
                         </span>
                     </p>
-                    <p><strong><?php _e('Bloqueos Hoy:', 'solwed-wp'); ?></strong> 
+                    <p><strong><?php esc_html_e('Bloqueos Hoy:', 'solwed-wp'); ?></strong> 
                         <span class="solwed-status-badge <?php echo ($stats['blocks_today'] > 0) ? 'failed' : 'sent'; ?>">
-                            <?php echo $stats['blocks_today']; ?>
+                            <?php echo esc_html($stats['blocks_today']); ?>
                         </span>
                     </p>
-                    <p><strong><?php _e('Fecha:', 'solwed-wp'); ?></strong> <?php echo date_i18n('d/m/Y'); ?></p>
-                    <p><strong><?php _e('Hora:', 'solwed-wp'); ?></strong> <?php echo date_i18n('H:i:s'); ?></p>
+                    <p><strong><?php esc_html_e('Fecha:', 'solwed-wp'); ?></strong> <?php echo esc_html(date_i18n('d/m/Y')); ?></p>
+                    <p><strong><?php esc_html_e('Hora:', 'solwed-wp'); ?></strong> <?php echo esc_html(date_i18n('H:i:s')); ?></p>
                 </div>
             </div>
 
             <?php if ($stats['email_failed'] > 0): ?>
             <div class="solwed-sidebar-panel solwed-panel" style="border-left: 4px solid #d63638;">
-                <h3><?php _e('⚠️ Emails Fallidos', 'solwed-wp'); ?></h3>
+                <h3><?php esc_html_e('⚠️ Emails Fallidos', 'solwed-wp'); ?></h3>
                 <p style="color: #d63638; font-size: 12px; line-height: 1.4;">
-                    <strong><?php echo $stats['email_failed']; ?></strong> <?php _e('emails han fallado.', 'solwed-wp'); ?><br>
-                    <?php _e('Revisa la configuración SMTP en la pestaña correspondiente.', 'solwed-wp'); ?>
+                    <strong><?php echo esc_html($stats['email_failed']); ?></strong> <?php esc_html_e('emails han fallado.', 'solwed-wp'); ?><br>
+                    <?php esc_html_e('Revisa la configuración SMTP en la pestaña correspondiente.', 'solwed-wp'); ?>
                 </p>
             </div>
             <?php endif; ?>
 
             <?php if ($stats['current_blocks'] > 0): ?>
             <div class="solwed-sidebar-panel solwed-panel" style="border-left: 4px solid #ff9800;">
-                <h3><?php _e('🛡️ Bloqueos Activos', 'solwed-wp'); ?></h3>
+                <h3><?php esc_html_e('🛡️ Bloqueos Activos', 'solwed-wp'); ?></h3>
                 <p style="color: #ff9800; font-size: 12px; line-height: 1.4;">
-                    <strong><?php echo $stats['current_blocks']; ?></strong> <?php _e('IPs están bloqueadas actualmente.', 'solwed-wp'); ?><br>
-                    <?php _e('Estos bloqueos expirarán automáticamente según la configuración.', 'solwed-wp'); ?>
+                    <strong><?php echo esc_html($stats['current_blocks']); ?></strong> <?php esc_html_e('IPs están bloqueadas actualmente.', 'solwed-wp'); ?><br>
+                    <?php esc_html_e('Estos bloqueos expirarán automáticamente según la configuración.', 'solwed-wp'); ?>
                 </p>
             </div>
             <?php endif; ?>
 
             <div class="solwed-sidebar-panel solwed-panel">
-                <h3><?php _e('🔧 Gestión de Logs', 'solwed-wp'); ?></h3>
+                <h3><?php esc_html_e('🔧 Gestión de Logs', 'solwed-wp'); ?></h3>
                 <ul style="padding-left: 20px; line-height: 1.6;">
-                    <li><?php _e('Los logs se limpian automáticamente después de 30 días', 'solwed-wp'); ?></li>
-                    <li><?php _e('Los bloqueos expiran según la configuración de seguridad', 'solwed-wp'); ?></li>
-                    <li><?php _e('Revisa regularmente los emails fallidos', 'solwed-wp'); ?></li>
-                    <li><?php _e('Los bloqueos excesivos pueden indicar un ataque', 'solwed-wp'); ?></li>
+                    <li><?php esc_html_e('Los logs se limpian automáticamente después de 30 días', 'solwed-wp'); ?></li>
+                    <li><?php esc_html_e('Los bloqueos expiran según la configuración de seguridad', 'solwed-wp'); ?></li>
+                    <li><?php esc_html_e('Revisa regularmente los emails fallidos', 'solwed-wp'); ?></li>
+                    <li><?php esc_html_e('Los bloqueos excesivos pueden indicar un ataque', 'solwed-wp'); ?></li>
                 </ul>
             </div>
 
             <div class="solwed-sidebar-panel solwed-panel">
-                <h3><?php _e('📈 Ratios de Éxito', 'solwed-wp'); ?></h3>
+                <h3><?php esc_html_e('📈 Ratios de Éxito', 'solwed-wp'); ?></h3>
                 <div class="solwed-stats-info">
                     <?php 
                     $total_emails = $stats['email_sent'] + $stats['email_failed'];
                     $email_success_rate = $total_emails > 0 ? round(($stats['email_sent'] / $total_emails) * 100, 1) : 0;
                     ?>
-                    <p><strong><?php _e('Tasa Éxito Emails:', 'solwed-wp'); ?></strong> 
+                    <p><strong><?php esc_html_e('Tasa Éxito Emails:', 'solwed-wp'); ?></strong> 
                         <span class="solwed-status-badge <?php echo ($email_success_rate >= 90) ? 'sent' : 'failed'; ?>">
-                            <?php echo $email_success_rate; ?>%
+                            <?php echo esc_html($email_success_rate); ?>%
                         </span>
                     </p>
-                    <p><strong><?php _e('Total Emails:', 'solwed-wp'); ?></strong> <?php echo $total_emails; ?></p>
+                    <p><strong><?php esc_html_e('Total Emails:', 'solwed-wp'); ?></strong> <?php echo esc_html($total_emails); ?></p>
                     
                     <?php if ($stats['current_blocks'] > 0): ?>
-                    <p><strong><?php _e('Seguridad:', 'solwed-wp'); ?></strong> 
-                        <span class="solwed-status-badge failed"><?php _e('Amenazas Activas', 'solwed-wp'); ?></span>
+                    <p><strong><?php esc_html_e('Seguridad:', 'solwed-wp'); ?></strong> 
+                        <span class="solwed-status-badge failed"><?php esc_html_e('Amenazas Activas', 'solwed-wp'); ?></span>
                     </p>
                     <?php else: ?>
-                    <p><strong><?php _e('Seguridad:', 'solwed-wp'); ?></strong> 
-                        <span class="solwed-status-badge sent"><?php _e('Sin Amenazas', 'solwed-wp'); ?></span>
+                    <p><strong><?php esc_html_e('Seguridad:', 'solwed-wp'); ?></strong> 
+                        <span class="solwed-status-badge sent"><?php esc_html_e('Sin Amenazas', 'solwed-wp'); ?></span>
                     </p>
                     <?php endif; ?>
                 </div>

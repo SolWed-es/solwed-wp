@@ -28,10 +28,10 @@ $editor_settings = [
 global $wpdb;
 $log_prefix = SOLWED_WP_PREFIX;
 $logs_stats = [
-    'current_blocks' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}failed_attempts WHERE blocked_until > NOW()"),
-    'total_emails' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}email_logs"),
-    'email_today' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}email_logs WHERE DATE(timestamp) = CURDATE()"),
-    'blocks_today' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}security_logs WHERE DATE(timestamp) = CURDATE()")
+    'current_blocks' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}failed_attempts WHERE blocked_until > NOW()"), // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+    'total_emails' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}email_logs"), // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+    'email_today' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}email_logs WHERE DATE(timestamp) = CURDATE()"), // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+    'blocks_today' => (int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}{$log_prefix}security_logs WHERE DATE(timestamp) = CURDATE()") // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 ];
 
 // Configuración del banner
@@ -246,26 +246,26 @@ $banner_enabled = $appearance ? $appearance->is_banner_enabled() : false;
     <div class="solwed-dashboard-header">
         <h1>
             <img src="<?php echo esc_url(SOLWED_WP_PLUGIN_URL . 'assets/img/LogotipoClaro.png'); ?>" alt="Solwed" style="height: 40px;">
-            <?php _e('Dashboard - Solwed WP', 'solwed-wp'); ?>
+            <?php esc_html_e('Dashboard - Solwed WP', 'solwed-wp'); ?>
         </h1>
-        <p style="margin: 0; font-size: 16px; opacity: 0.9;"><?php _e('Centro de control y monitoreo de todos los módulos', 'solwed-wp'); ?></p>
+        <p style="margin: 0; font-size: 16px; opacity: 0.9;"><?php esc_html_e('Centro de control y monitoreo de todos los módulos', 'solwed-wp'); ?></p>
         
         <div class="solwed-dashboard-overview">
             <div class="solwed-overview-item">
-                <div class="solwed-overview-number"><?php echo $logs_stats['email_today']; ?></div>
-                <div class="solwed-overview-label"><?php _e('Emails Hoy', 'solwed-wp'); ?></div>
+                <div class="solwed-overview-number"><?php echo esc_html($1); ?></div>
+                <div class="solwed-overview-label"><?php esc_html_e('Emails Hoy', 'solwed-wp'); ?></div>
             </div>
             <div class="solwed-overview-item">
-                <div class="solwed-overview-number"><?php echo $logs_stats['blocks_today']; ?></div>
-                <div class="solwed-overview-label"><?php _e('Bloqueos Hoy', 'solwed-wp'); ?></div>
+                <div class="solwed-overview-number"><?php echo esc_html($1); ?></div>
+                <div class="solwed-overview-label"><?php esc_html_e('Bloqueos Hoy', 'solwed-wp'); ?></div>
             </div>
             <div class="solwed-overview-item">
-                <div class="solwed-overview-number"><?php echo $logs_stats['current_blocks']; ?></div>
-                <div class="solwed-overview-label"><?php _e('Bloqueos Activos', 'solwed-wp'); ?></div>
+                <div class="solwed-overview-number"><?php echo esc_html($1); ?></div>
+                <div class="solwed-overview-label"><?php esc_html_e('Bloqueos Activos', 'solwed-wp'); ?></div>
             </div>
             <div class="solwed-overview-item">
                 <div class="solwed-overview-number">6</div>
-                <div class="solwed-overview-label"><?php _e('Módulos Disponibles', 'solwed-wp'); ?></div>
+                <div class="solwed-overview-label"><?php esc_html_e('Módulos Disponibles', 'solwed-wp'); ?></div>
             </div>
         </div>
     </div>
@@ -278,33 +278,33 @@ $banner_enabled = $appearance ? $appearance->is_banner_enabled() : false;
             <div class="solwed-module-card">
                 <div class="solwed-module-header">
                     <h3 class="solwed-module-title">
-                        📧 <?php _e('SMTP', 'solwed-wp'); ?>
+                        📧 <?php esc_html_e('SMTP', 'solwed-wp'); ?>
                     </h3>
                     <span class="solwed-module-status solwed-status-badge <?php echo ($smtp && $smtp->is_enabled()) ? 'sent' : 'failed'; ?>">
-                        <?php echo ($smtp && $smtp->is_enabled()) ? __('Activo', 'solwed-wp') : __('Inactivo', 'solwed-wp'); ?>
+                        <?php echo ($smtp && $smtp->is_enabled()) ? esc_html(__('Activo', 'solwed-wp')) : esc_html(__('Inactivo', 'solwed-wp')); ?>
                     </span>
                 </div>
                 
-                <p class="solwed-module-description"><?php _e('Configuración del servidor SMTP para el envío de emails desde WordPress.', 'solwed-wp'); ?></p>
+                <p class="solwed-module-description"><?php esc_html_e('Configuración del servidor SMTP para el envío de emails desde WordPress.', 'solwed-wp'); ?></p>
                 
                 <div class="solwed-module-stats">
                     <div class="solwed-stat-box">
                         <span class="solwed-stat-number"><?php echo esc_html($smtp_stats['total_sent'] ?? 0); ?></span>
-                        <p class="solwed-stat-label"><?php _e('Enviados', 'solwed-wp'); ?></p>
+                        <p class="solwed-stat-label"><?php esc_html_e('Enviados', 'solwed-wp'); ?></p>
                     </div>
                     <div class="solwed-stat-box">
                         <span class="solwed-stat-number"><?php echo esc_html($smtp_stats['total_failed'] ?? 0); ?></span>
-                        <p class="solwed-stat-label"><?php _e('Fallidos', 'solwed-wp'); ?></p>
+                        <p class="solwed-stat-label"><?php esc_html_e('Fallidos', 'solwed-wp'); ?></p>
                     </div>
                     <div class="solwed-stat-box">
-                        <span class="solwed-stat-number"><?php echo $logs_stats['email_today']; ?></span>
-                        <p class="solwed-stat-label"><?php _e('Hoy', 'solwed-wp'); ?></p>
+                        <span class="solwed-stat-number"><?php echo esc_html($1); ?></span>
+                        <p class="solwed-stat-label"><?php esc_html_e('Hoy', 'solwed-wp'); ?></p>
                     </div>
                 </div>
                 
                 <div class="solwed-module-actions">
                     <a href="<?php echo esc_url(admin_url('admin.php?page=solwed-wp-settings&tab=smtp')); ?>" class="button button-primary">
-                        <?php _e('Configurar SMTP', 'solwed-wp'); ?>
+                        <?php esc_html_e('Configurar SMTP', 'solwed-wp'); ?>
                     </a>
                 </div>
             </div>
@@ -321,33 +321,33 @@ $banner_enabled = $appearance ? $appearance->is_banner_enabled() : false;
             <div class="solwed-module-card">
                 <div class="solwed-module-header">
                     <h3 class="solwed-module-title">
-                        🏢 <?php _e('FacturaScript', 'solwed-wp'); ?>
+                        🏢 <?php esc_html_e('FacturaScript', 'solwed-wp'); ?>
                     </h3>
                     <span class="solwed-module-status solwed-status-badge <?php echo ($facturascript_enabled === '1') ? 'sent' : 'failed'; ?>">
-                        <?php echo ($facturascript_enabled === '1') ? __('Activo', 'solwed-wp') : __('Inactivo', 'solwed-wp'); ?>
+                        <?php echo ($facturascript_enabled === '1') ? esc_html(__('Activo', 'solwed-wp')) : esc_html(__('Inactivo', 'solwed-wp')); ?>
                     </span>
                 </div>
                 
-                <p class="solwed-module-description"><?php _e('Integración con FacturaScript CRM para crear oportunidades y clientes automáticamente.', 'solwed-wp'); ?></p>
+                <p class="solwed-module-description"><?php esc_html_e('Integración con FacturaScript CRM para crear oportunidades y clientes automáticamente.', 'solwed-wp'); ?></p>
                 
                 <div class="solwed-module-stats">
                     <div class="solwed-stat-box">
                         <span class="solwed-stat-number"><?php echo esc_html($fs_stats['opportunities']); ?></span>
-                        <p class="solwed-stat-label"><?php _e('Oportunidades', 'solwed-wp'); ?></p>
+                        <p class="solwed-stat-label"><?php esc_html_e('Oportunidades', 'solwed-wp'); ?></p>
                     </div>
                     <div class="solwed-stat-box">
                         <span class="solwed-stat-number"><?php echo esc_html($fs_stats['clients']); ?></span>
-                        <p class="solwed-stat-label"><?php _e('Clientes', 'solwed-wp'); ?></p>
+                        <p class="solwed-stat-label"><?php esc_html_e('Clientes', 'solwed-wp'); ?></p>
                     </div>
                     <div class="solwed-stat-box">
                         <span class="solwed-stat-number"><?php echo esc_html($fs_stats['today']); ?></span>
-                        <p class="solwed-stat-label"><?php _e('Hoy', 'solwed-wp'); ?></p>
+                        <p class="solwed-stat-label"><?php esc_html_e('Hoy', 'solwed-wp'); ?></p>
                     </div>
                 </div>
                 
                 <div class="solwed-module-actions">
                     <a href="<?php echo esc_url(admin_url('admin.php?page=solwed-wp-settings&tab=facturascript')); ?>" class="button button-primary">
-                        <?php _e('Configurar CRM', 'solwed-wp'); ?>
+                        <?php esc_html_e('Configurar CRM', 'solwed-wp'); ?>
                     </a>
                 </div>
             </div>
@@ -356,33 +356,33 @@ $banner_enabled = $appearance ? $appearance->is_banner_enabled() : false;
             <div class="solwed-module-card">
                 <div class="solwed-module-header">
                     <h3 class="solwed-module-title">
-                        🎨 <?php _e('Apariencia', 'solwed-wp'); ?>
+                        🎨 <?php esc_html_e('Apariencia', 'solwed-wp'); ?>
                     </h3>
-                    <span class="solwed-module-status solwed-status-badge <?php echo $banner_enabled ? 'sent' : 'failed'; ?>">
-                        <?php echo $banner_enabled ? __('Banner Activo', 'solwed-wp') : __('Banner Inactivo', 'solwed-wp'); ?>
+                    <span class="solwed-module-status solwed-status-badge <?php echo esc_html($1); ?>">
+                        <?php echo esc_html($1); ?>
                     </span>
                 </div>
                 
-                <p class="solwed-module-description"><?php _e('Configuración del banner inferior de Solwed y personalización de la apariencia del sitio.', 'solwed-wp'); ?></p>
+                <p class="solwed-module-description"><?php esc_html_e('Configuración del banner inferior de Solwed y personalización de la apariencia del sitio.', 'solwed-wp'); ?></p>
                 
                 <div class="solwed-module-stats">
                     <div class="solwed-stat-box">
-                        <span class="solwed-stat-number"><?php echo $banner_enabled ? '✓' : '✗'; ?></span>
-                        <p class="solwed-stat-label"><?php _e('Banner', 'solwed-wp'); ?></p>
+                        <span class="solwed-stat-number"><?php echo esc_html($1); ?></span>
+                        <p class="solwed-stat-label"><?php esc_html_e('Banner', 'solwed-wp'); ?></p>
                     </div>
                     <div class="solwed-stat-box">
                         <span class="solwed-stat-number" style="font-size: 12px;"><?php echo esc_html(ucfirst(get_option(SOLWED_WP_PREFIX . 'banner_position', 'bottom'))); ?></span>
-                        <p class="solwed-stat-label"><?php _e('Posición', 'solwed-wp'); ?></p>
+                        <p class="solwed-stat-label"><?php esc_html_e('Posición', 'solwed-wp'); ?></p>
                     </div>
                     <div class="solwed-stat-box">
                         <span class="solwed-stat-number" style="font-size: 12px;"><?php echo esc_html(ucfirst(get_option(SOLWED_WP_PREFIX . 'banner_animation', 'slide'))); ?></span>
-                        <p class="solwed-stat-label"><?php _e('Animación', 'solwed-wp'); ?></p>
+                        <p class="solwed-stat-label"><?php esc_html_e('Animación', 'solwed-wp'); ?></p>
                     </div>
                 </div>
                 
                 <div class="solwed-module-actions">
                     <a href="<?php echo esc_url(admin_url('admin.php?page=solwed-wp-settings&tab=appearance')); ?>" class="button button-primary">
-                        <?php _e('Configurar Apariencia', 'solwed-wp'); ?>
+                        <?php esc_html_e('Configurar Apariencia', 'solwed-wp'); ?>
                     </a>
                 </div>
             </div>
@@ -391,33 +391,33 @@ $banner_enabled = $appearance ? $appearance->is_banner_enabled() : false;
             <div class="solwed-module-card">
                 <div class="solwed-module-header">
                     <h3 class="solwed-module-title">
-                        🔒 <?php _e('Seguridad', 'solwed-wp'); ?>
+                        🔒 <?php esc_html_e('Seguridad', 'solwed-wp'); ?>
                     </h3>
                     <span class="solwed-module-status solwed-status-badge <?php echo ($security && $security->is_enabled()) ? 'sent' : 'failed'; ?>">
-                        <?php echo ($security && $security->is_enabled()) ? __('Protegido', 'solwed-wp') : __('Desprotegido', 'solwed-wp'); ?>
+                        <?php echo ($security && $security->is_enabled()) ? esc_html(__('Protegido', 'solwed-wp')) : esc_html(__('Desprotegido', 'solwed-wp')); ?>
                     </span>
                 </div>
                 
-                <p class="solwed-module-description"><?php _e('Protección contra ataques de fuerza bruta, SSL forzado y URL de login personalizada.', 'solwed-wp'); ?></p>
+                <p class="solwed-module-description"><?php esc_html_e('Protección contra ataques de fuerza bruta, SSL forzado y URL de login personalizada.', 'solwed-wp'); ?></p>
                 
                 <div class="solwed-module-stats">
                     <div class="solwed-stat-box">
                         <span class="solwed-stat-number"><?php echo esc_html($security_stats['total_failed_attempts'] ?? 0); ?></span>
-                        <p class="solwed-stat-label"><?php _e('Intentos Fallidos', 'solwed-wp'); ?></p>
+                        <p class="solwed-stat-label"><?php esc_html_e('Intentos Fallidos', 'solwed-wp'); ?></p>
                     </div>
                     <div class="solwed-stat-box">
-                        <span class="solwed-stat-number"><?php echo $logs_stats['current_blocks']; ?></span>
-                        <p class="solwed-stat-label"><?php _e('IPs Bloqueadas', 'solwed-wp'); ?></p>
+                        <span class="solwed-stat-number"><?php echo esc_html($1); ?></span>
+                        <p class="solwed-stat-label"><?php esc_html_e('IPs Bloqueadas', 'solwed-wp'); ?></p>
                     </div>
                     <div class="solwed-stat-box">
-                        <span class="solwed-stat-number"><?php echo $logs_stats['blocks_today']; ?></span>
-                        <p class="solwed-stat-label"><?php _e('Bloqueos Hoy', 'solwed-wp'); ?></p>
+                        <span class="solwed-stat-number"><?php echo esc_html($1); ?></span>
+                        <p class="solwed-stat-label"><?php esc_html_e('Bloqueos Hoy', 'solwed-wp'); ?></p>
                     </div>
                 </div>
                 
                 <div class="solwed-module-actions">
                     <a href="<?php echo esc_url(admin_url('admin.php?page=solwed-wp-settings&tab=security')); ?>" class="button button-primary">
-                        <?php _e('Configurar Seguridad', 'solwed-wp'); ?>
+                        <?php esc_html_e('Configurar Seguridad', 'solwed-wp'); ?>
                     </a>
                 </div>
             </div>
@@ -434,33 +434,33 @@ $banner_enabled = $appearance ? $appearance->is_banner_enabled() : false;
             <div class="solwed-module-card">
                 <div class="solwed-module-header">
                     <h3 class="solwed-module-title">
-                        👨‍💻 <?php _e('Editor de Código', 'solwed-wp'); ?>
+                        👨‍💻 <?php esc_html_e('Editor de Código', 'solwed-wp'); ?>
                     </h3>
                     <span class="solwed-module-status solwed-status-badge <?php echo ($total_code_lines > 0) ? 'sent' : 'failed'; ?>">
-                        <?php echo ($total_code_lines > 0) ? __('Código Activo', 'solwed-wp') : __('Sin Código', 'solwed-wp'); ?>
+                        <?php echo ($total_code_lines > 0) ? esc_html(__('Código Activo', 'solwed-wp')) : esc_html(__('Sin Código', 'solwed-wp')); ?>
                     </span>
                 </div>
                 
-                <p class="solwed-module-description"><?php _e('Editor avanzado para añadir CSS, JavaScript y PHP personalizado al sitio web.', 'solwed-wp'); ?></p>
+                <p class="solwed-module-description"><?php esc_html_e('Editor avanzado para añadir CSS, JavaScript y PHP personalizado al sitio web.', 'solwed-wp'); ?></p>
                 
                 <div class="solwed-module-stats">
                     <div class="solwed-stat-box">
-                        <span class="solwed-stat-number"><?php echo $total_code_lines; ?></span>
-                        <p class="solwed-stat-label"><?php _e('Líneas de Código', 'solwed-wp'); ?></p>
+                        <span class="solwed-stat-number"><?php echo esc_html($1); ?></span>
+                        <p class="solwed-stat-label"><?php esc_html_e('Líneas de Código', 'solwed-wp'); ?></p>
                     </div>
                     <div class="solwed-stat-box">
-                        <span class="solwed-stat-number"><?php echo $active_sections; ?></span>
-                        <p class="solwed-stat-label"><?php _e('Secciones Activas', 'solwed-wp'); ?></p>
+                        <span class="solwed-stat-number"><?php echo esc_html($1); ?></span>
+                        <p class="solwed-stat-label"><?php esc_html_e('Secciones Activas', 'solwed-wp'); ?></p>
                     </div>
                     <div class="solwed-stat-box">
                         <span class="solwed-stat-number"><?php echo !empty($editor_settings['custom_php']) ? '⚠️' : '✓'; ?></span>
-                        <p class="solwed-stat-label"><?php _e('PHP Status', 'solwed-wp'); ?></p>
+                        <p class="solwed-stat-label"><?php esc_html_e('PHP Status', 'solwed-wp'); ?></p>
                     </div>
                 </div>
                 
                 <div class="solwed-module-actions">
                     <a href="<?php echo esc_url(admin_url('admin.php?page=solwed-wp-settings&tab=code-editor')); ?>" class="button button-primary">
-                        <?php _e('Editor de Código', 'solwed-wp'); ?>
+                        <?php esc_html_e('Editor de Código', 'solwed-wp'); ?>
                     </a>
                 </div>
             </div>
@@ -469,33 +469,33 @@ $banner_enabled = $appearance ? $appearance->is_banner_enabled() : false;
             <div class="solwed-module-card">
                 <div class="solwed-module-header">
                     <h3 class="solwed-module-title">
-                        📋 <?php _e('Logs del Sistema', 'solwed-wp'); ?>
+                        📋 <?php esc_html_e('Logs del Sistema', 'solwed-wp'); ?>
                     </h3>
                     <span class="solwed-module-status solwed-status-badge <?php echo ($logs_stats['current_blocks'] > 0) ? 'failed' : 'sent'; ?>">
-                        <?php echo ($logs_stats['current_blocks'] > 0) ? __('Amenazas Activas', 'solwed-wp') : __('Sin Amenazas', 'solwed-wp'); ?>
+                        <?php echo ($logs_stats['current_blocks'] > 0) ? esc_html(__('Amenazas Activas', 'solwed-wp')) : esc_html(__('Sin Amenazas', 'solwed-wp')); ?>
                     </span>
                 </div>
                 
-                <p class="solwed-module-description"><?php _e('Registros de actividad del sistema: emails enviados, bloqueos de seguridad y logs de eventos.', 'solwed-wp'); ?></p>
+                <p class="solwed-module-description"><?php esc_html_e('Registros de actividad del sistema: emails enviados, bloqueos de seguridad y logs de eventos.', 'solwed-wp'); ?></p>
                 
                 <div class="solwed-module-stats">
                     <div class="solwed-stat-box">
-                        <span class="solwed-stat-number"><?php echo $logs_stats['total_emails']; ?></span>
-                        <p class="solwed-stat-label"><?php _e('Total Emails', 'solwed-wp'); ?></p>
+                        <span class="solwed-stat-number"><?php echo esc_html($1); ?></span>
+                        <p class="solwed-stat-label"><?php esc_html_e('Total Emails', 'solwed-wp'); ?></p>
                     </div>
                     <div class="solwed-stat-box">
-                        <span class="solwed-stat-number"><?php echo $logs_stats['current_blocks']; ?></span>
-                        <p class="solwed-stat-label"><?php _e('Bloqueos Activos', 'solwed-wp'); ?></p>
+                        <span class="solwed-stat-number"><?php echo esc_html($1); ?></span>
+                        <p class="solwed-stat-label"><?php esc_html_e('Bloqueos Activos', 'solwed-wp'); ?></p>
                     </div>
                     <div class="solwed-stat-box">
-                        <span class="solwed-stat-number"><?php echo $logs_stats['email_today']; ?></span>
-                        <p class="solwed-stat-label"><?php _e('Actividad Hoy', 'solwed-wp'); ?></p>
+                        <span class="solwed-stat-number"><?php echo esc_html($1); ?></span>
+                        <p class="solwed-stat-label"><?php esc_html_e('Actividad Hoy', 'solwed-wp'); ?></p>
                     </div>
                 </div>
                 
                 <div class="solwed-module-actions">
                     <a href="<?php echo esc_url(admin_url('admin.php?page=solwed-wp-settings&tab=logs')); ?>" class="button button-primary">
-                        <?php _e('Ver Logs', 'solwed-wp'); ?>
+                        <?php esc_html_e('Ver Logs', 'solwed-wp'); ?>
                     </a>
                 </div>
             </div>
@@ -503,29 +503,29 @@ $banner_enabled = $appearance ? $appearance->is_banner_enabled() : false;
             <!-- Tarjeta 1: Accesos Rápidos -->
             <div class="solwed-module-card solwed-info-card">
                 <div class="solwed-module-header">
-                    <h3 class="solwed-module-title">🔗 <?php _e('Accesos Rápidos', 'solwed-wp'); ?></h3>
+                    <h3 class="solwed-module-title">🔗 <?php esc_html_e('Accesos Rápidos', 'solwed-wp'); ?></h3>
                 </div>
                 
-                <p ><?php _e('Enlaces directos a todas las configuraciones del plugin.', 'solwed-wp'); ?></p>
+                <p ><?php esc_html_e('Enlaces directos a todas las configuraciones del plugin.', 'solwed-wp'); ?></p>
                 
                 <div class="solwed-quick-links">
                     <a href="<?php echo esc_url(admin_url('admin.php?page=solwed-wp-settings&tab=smtp')); ?>" class="solwed-quick-link">
-                        📧 <?php _e('Configurar SMTP', 'solwed-wp'); ?>
+                        📧 <?php esc_html_e('Configurar SMTP', 'solwed-wp'); ?>
                     </a>
                     <a href="<?php echo esc_url(admin_url('admin.php?page=solwed-wp-settings&tab=facturascript')); ?>" class="solwed-quick-link">
-                        🏢 <?php _e('FacturaScript CRM', 'solwed-wp'); ?>
+                        🏢 <?php esc_html_e('FacturaScript CRM', 'solwed-wp'); ?>
                     </a>
                     <a href="<?php echo esc_url(admin_url('admin.php?page=solwed-wp-settings&tab=security')); ?>" class="solwed-quick-link">
-                        🔒 <?php _e('Configurar Seguridad', 'solwed-wp'); ?>
+                        🔒 <?php esc_html_e('Configurar Seguridad', 'solwed-wp'); ?>
                     </a>
                     <a href="<?php echo esc_url(admin_url('admin.php?page=solwed-wp-settings&tab=appearance')); ?>" class="solwed-quick-link">
-                        🎨 <?php _e('Configurar Apariencia', 'solwed-wp'); ?>
+                        🎨 <?php esc_html_e('Configurar Apariencia', 'solwed-wp'); ?>
                     </a>
                     <a href="<?php echo esc_url(admin_url('admin.php?page=solwed-wp-settings&tab=code-editor')); ?>" class="solwed-quick-link">
-                        👨‍💻 <?php _e('Editor de Código', 'solwed-wp'); ?>
+                        👨‍💻 <?php esc_html_e('Editor de Código', 'solwed-wp'); ?>
                     </a>
                     <a href="<?php echo esc_url(admin_url('admin.php?page=solwed-wp-settings&tab=logs')); ?>" class="solwed-quick-link">
-                        📋 <?php _e('Ver Logs', 'solwed-wp'); ?>
+                        📋 <?php esc_html_e('Ver Logs', 'solwed-wp'); ?>
                     </a>
                 </div>
 
@@ -533,15 +533,15 @@ $banner_enabled = $appearance ? $appearance->is_banner_enabled() : false;
 
                 <?php if ($logs_stats['current_blocks'] > 0): ?>
                 <div style="margin-top: 15px; padding: 10px; background: rgba(244, 67, 54, 0.2); border-radius: 4px; border-left: 4px solid #f44336;">
-                    <strong style="color: #f44336;">⚠️ <?php _e('Alerta de Seguridad', 'solwed-wp'); ?></strong><br>
-                    <small><?php echo $logs_stats['current_blocks']; ?> <?php _e('IPs bloqueadas activamente', 'solwed-wp'); ?></small>
+                    <strong style="color: #f44336;">⚠️ <?php esc_html_e('Alerta de Seguridad', 'solwed-wp'); ?></strong><br>
+                    <small><?php echo esc_html($1); ?> <?php esc_html_e('IPs bloqueadas activamente', 'solwed-wp'); ?></small>
                 </div>
                 <?php endif; ?>
 
                 <?php if (!empty($editor_settings['custom_php'])): ?>
                 <div style="margin-top: 15px; padding: 10px; background: rgba(255, 152, 0, 0.2); border-radius: 4px; border-left: 4px solid #ff9800;">
-                    <strong style="color: #ff9800;">⚠️ <?php _e('PHP Personalizado', 'solwed-wp'); ?></strong><br>
-                    <small><?php _e('Código PHP activo en el sistema', 'solwed-wp'); ?></small>
+                    <strong style="color: #ff9800;">⚠️ <?php esc_html_e('PHP Personalizado', 'solwed-wp'); ?></strong><br>
+                    <small><?php esc_html_e('Código PHP activo en el sistema', 'solwed-wp'); ?></small>
                 </div>
                 <?php endif; ?>
             </div>
@@ -549,44 +549,44 @@ $banner_enabled = $appearance ? $appearance->is_banner_enabled() : false;
             <!-- Tarjeta 2: Información del Sistema -->
             <div class="solwed-module-card solwed-info-card">
                 <div class="solwed-module-header">
-                    <h3 class="solwed-module-title">ℹ️ <?php _e('Información del Sistema', 'solwed-wp'); ?></h3>
+                    <h3 class="solwed-module-title">ℹ️ <?php esc_html_e('Información del Sistema', 'solwed-wp'); ?></h3>
                 </div>
                 
-                <p><?php _e('Detalles técnicos del servidor y software instalado.', 'solwed-wp'); ?></p>
+                <p><?php esc_html_e('Detalles técnicos del servidor y software instalado.', 'solwed-wp'); ?></p>
                 
                 <div class="solwed-info-item">
-                    <span><?php _e('Plugin Solwed WP:', 'solwed-wp'); ?></span>
-                    <strong>v<?php echo SOLWED_WP_VERSION; ?></strong>
+                    <span><?php esc_html_e('Plugin Solwed WP:', 'solwed-wp'); ?></span>
+                    <strong>v<?php echo esc_html(SOLWED_WP_VERSION); ?></strong>
                 </div>
                 <div class="solwed-info-item">
-                    <span><?php _e('WordPress:', 'solwed-wp'); ?></span>
-                    <strong>v<?php echo get_bloginfo('version'); ?></strong>
+                    <span><?php esc_html_e('WordPress:', 'solwed-wp'); ?></span>
+                    <strong>v<?php echo esc_html(get_bloginfo('version')); ?></strong>
                 </div>
                 <div class="solwed-info-item">
-                    <span><?php _e('PHP:', 'solwed-wp'); ?></span>
+                    <span><?php esc_html_e('PHP:', 'solwed-wp'); ?></span>
                     <strong>v<?php echo PHP_VERSION; ?></strong>
                 </div>
                 <div class="solwed-info-item">
-                    <span><?php _e('MySQL:', 'solwed-wp'); ?></span>
-                    <strong>v<?php echo $wpdb->db_version(); ?></strong>
+                    <span><?php esc_html_e('MySQL:', 'solwed-wp'); ?></span>
+                    <strong>v<?php echo esc_html($1); ?></strong>
                 </div>
                 <?php if (class_exists('WooCommerce')): ?>
                 <div class="solwed-info-item">
-                    <span><?php _e('WooCommerce:', 'solwed-wp'); ?></span>
-                    <strong>v<?php echo WC_VERSION; ?></strong>
+                    <span><?php esc_html_e('WooCommerce:', 'solwed-wp'); ?></span>
+                    <strong>v<?php echo esc_html(WC_VERSION); ?></strong>
                 </div>
                 <?php endif; ?>
                 <div class="solwed-info-item">
-                    <span><?php _e('Servidor:', 'solwed-wp'); ?></span>
-                    <strong><?php echo substr($_SERVER['SERVER_SOFTWARE'], 0, 20); ?></strong>
+                    <span><?php esc_html_e('Servidor:', 'solwed-wp'); ?></span>
+                    <strong><?php echo esc_html(substr(sanitize_text_field(wp_unslash($_SERVER['SERVER_SOFTWARE'] ?? '')), 0, 20)); ?></strong>
                 </div>
                 <div class="solwed-info-item">
-                    <span><?php _e('Memoria PHP:', 'solwed-wp'); ?></span>
-                    <strong><?php echo ini_get('memory_limit'); ?></strong>
+                    <span><?php esc_html_e('Memoria PHP:', 'solwed-wp'); ?></span>
+                    <strong><?php echo esc_html(ini_get('memory_limit')); ?></strong>
                 </div>
                 <div class="solwed-info-item">
-                    <span><?php _e('Última actualización:', 'solwed-wp'); ?></span>
-                    <strong><?php echo date_i18n('d/m/Y H:i'); ?></strong>
+                    <span><?php esc_html_e('Última actualización:', 'solwed-wp'); ?></span>
+                    <strong><?php echo esc_html(date_i18n('d/m/Y H:i')); ?></strong>
                 </div>
             </div>
         </div>

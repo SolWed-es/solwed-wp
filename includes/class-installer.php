@@ -129,13 +129,13 @@ final class Solwed_Installer {
 			'username_attempted' => "VARCHAR(100) DEFAULT ''",
 		];
 
-		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $attempts_table ) ) !== $attempts_table ) {
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $attempts_table ) ) !== $attempts_table ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			return; // La tabla no existe, no hay nada que migrar.
 		}
 
 		foreach ( $columns_to_add as $column_name => $column_definition ) {
 			if ( ! self::column_exists( $attempts_table, $column_name ) ) {
-				$wpdb->query( "ALTER TABLE {$attempts_table} ADD COLUMN {$column_name} {$column_definition}" );
+				$wpdb->query( "ALTER TABLE {$attempts_table} ADD COLUMN {$column_name} {$column_definition}" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange
 			}
 		}
 	}
@@ -149,7 +149,7 @@ final class Solwed_Installer {
 	 */
 	private static function column_exists( string $table_name, string $column_name ): bool {
 		global $wpdb;
-		return (bool) $wpdb->get_var( $wpdb->prepare( 'SHOW COLUMNS FROM %i LIKE %s', $table_name, $column_name ) );
+		return (bool) $wpdb->get_var( $wpdb->prepare( "SHOW COLUMNS FROM {$table_name} LIKE %s", $column_name ) ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 	}
 
 
@@ -164,7 +164,7 @@ final class Solwed_Installer {
 			self::TABLE_EMAIL_LOGS,
 		];
 		foreach ( $tables as $table ) {
-			$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}{$table}" );
+			$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}{$table}" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange
 		}
 	}
 

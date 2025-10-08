@@ -20,7 +20,7 @@ final class Solwed_FacturaScript_Integration {
     /**
      * Configuraciones por defecto
      */
-    public const DEFAULT_API_URL = 'http://erpdemo.test/api/3';
+    public const DEFAULT_API_URL = 'https://erpdemo.test/api/3';
     public const DEFAULT_API_TOKEN = 'QLojHJpvraWR6FsFTtAC';
     
     /**
@@ -48,7 +48,7 @@ final class Solwed_FacturaScript_Integration {
         try {
             // Verificar que los objetos necesarios existen
             if (!$record || !$handler) {
-                error_log('Solwed FS: Record o Handler nulo');
+                error_log('Solwed FS: Record o Handler nulo'); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
                 return false;
             }
             
@@ -61,7 +61,7 @@ final class Solwed_FacturaScript_Integration {
             }
             
             if (!$form_data) {
-                error_log('Solwed FS: No se pudieron obtener datos del formulario');
+                error_log('Solwed FS: No se pudieron obtener datos del formulario'); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
                 return false;
             }
             
@@ -69,7 +69,7 @@ final class Solwed_FacturaScript_Integration {
             $submission_text = $this->format_submission_data($form_data);
             
             if (!$submission_text) {
-                error_log('Solwed FS: No se pudo formatear datos de la submission');
+                error_log('Solwed FS: No se pudo formatear datos de la submission'); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
                 return false;
             }
             
@@ -82,7 +82,7 @@ final class Solwed_FacturaScript_Integration {
             return $result;
             
         } catch (Exception $e) {
-            error_log('Solwed FS Error: ' . $e->getMessage());
+            error_log('Solwed FS Error: ' . $e->getMessage()); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
             $this->update_statistics(false, $e->getMessage());
             return false;
         }
@@ -130,7 +130,7 @@ final class Solwed_FacturaScript_Integration {
         $opportunity_data = [
             'descripcion' => $page_title,
             'observaciones' => $submission_text,
-            'fecha' => date('Y-m-d')
+            'fecha' => gmdate('Y-m-d')
         ];
         
         // Vincular cliente si se creó exitosamente
@@ -297,7 +297,7 @@ final class Solwed_FacturaScript_Integration {
         ]);
         
         $stats['total_submissions']++;
-        $stats['last_submission'] = date('Y-m-d H:i:s');
+        $stats['last_submission'] = gmdate('Y-m-d H:i:s');
         
         if ($success) {
             $stats['successful_submissions']++;
@@ -357,6 +357,7 @@ final class Solwed_FacturaScript_Integration {
         global $wpdb;
         
         // Buscar submissions en la base de datos
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct query needed for form submissions
         $submissions = $wpdb->get_results("
             SELECT s.*, p.post_title 
             FROM {$wpdb->prefix}e_submissions s
@@ -377,6 +378,7 @@ final class Solwed_FacturaScript_Integration {
         foreach ($submissions as $submission) {
             try {
                 // Obtener los valores del formulario
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct query needed for form submissions
                 $form_values = $wpdb->get_results($wpdb->prepare("
                     SELECT `key`, `value` 
                     FROM {$wpdb->prefix}e_submissions_values 
@@ -486,35 +488,35 @@ function render_facturascript_statistics(array $stats): void {
     <table class="stats-table">
         <tbody>
             <tr>
-                <td><strong><?php _e('Módulo Activo', 'solwed-wp'); ?></strong></td>
+                <td><strong><?php esc_html_e('Módulo Activo', 'solwed-wp'); ?></strong></td>
                 <td><?php echo $stats['enabled'] ? '<span class="solwed-status-badge sent">✅</span>' : '<span class="solwed-status-badge failed">❌</span>'; ?></td>
             </tr>
             <tr>
-                <td><strong><?php _e('API Configurada', 'solwed-wp'); ?></strong></td>
+                <td><strong><?php esc_html_e('API Configurada', 'solwed-wp'); ?></strong></td>
                 <td><?php echo $stats['api_configured'] ? '<span class="solwed-status-badge sent">✅</span>' : '<span class="solwed-status-badge failed">❌</span>'; ?></td>
             </tr>
             <tr>
-                <td><strong><?php _e('Conexión FS', 'solwed-wp'); ?></strong></td>
+                <td><strong><?php esc_html_e('Conexión FS', 'solwed-wp'); ?></strong></td>
                 <td><?php echo $stats['connection'] ? '<span class="solwed-status-badge sent">✅</span>' : '<span class="solwed-status-badge failed">❌</span>'; ?></td>
             </tr>
             <tr>
-                <td><strong><?php _e('Elementor Pro', 'solwed-wp'); ?></strong></td>
+                <td><strong><?php esc_html_e('Elementor Pro', 'solwed-wp'); ?></strong></td>
                 <td><?php echo $stats['elementor_pro'] ? '<span class="solwed-status-badge sent">✅</span>' : '<span class="solwed-status-badge failed">❌</span>'; ?></td>
             </tr>
             <tr>
-                <td><strong><?php _e('Total Envíos', 'solwed-wp'); ?></strong></td>
+                <td><strong><?php esc_html_e('Total Envíos', 'solwed-wp'); ?></strong></td>
                 <td><?php echo esc_html($stats['total_submissions']); ?></td>
             </tr>
             <tr>
-                <td><strong><?php _e('Exitosos', 'solwed-wp'); ?></strong></td>
+                <td><strong><?php esc_html_e('Exitosos', 'solwed-wp'); ?></strong></td>
                 <td><?php echo esc_html($stats['successful_submissions']); ?></td>
             </tr>
             <tr>
-                <td><strong><?php _e('Fallidos', 'solwed-wp'); ?></strong></td>
+                <td><strong><?php esc_html_e('Fallidos', 'solwed-wp'); ?></strong></td>
                 <td><?php echo esc_html($stats['failed_submissions']); ?></td>
             </tr>
             <tr>
-                <td><strong><?php _e('Tasa Éxito', 'solwed-wp'); ?></strong></td>
+                <td><strong><?php esc_html_e('Tasa Éxito', 'solwed-wp'); ?></strong></td>
                 <td><?php echo esc_html($stats['success_rate']); ?>%</td>
             </tr>
         </tbody>
@@ -522,7 +524,7 @@ function render_facturascript_statistics(array $stats): void {
 
     <?php if (!empty($stats['last_submission']) && $stats['last_submission'] !== 'Nunca'): ?>
     <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
-        <h4 style="margin-bottom: 8px; font-size: 12px;"><?php _e('Último Envío', 'solwed-wp'); ?></h4>
+        <h4 style="margin-bottom: 8px; font-size: 12px;"><?php esc_html_e('Último Envío', 'solwed-wp'); ?></h4>
         <p style="margin: 0; font-size: 11px;">
             <?php echo esc_html($stats['last_submission']); ?>
             <?php if (!empty($stats['last_error'])): ?>
@@ -551,25 +553,21 @@ function get_facturascript_stats(): array {
  */
 function render_facturascript_tab(): void {
     // Procesar formulario
-    if ($_POST) {
+    if ($_POST) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verification performed below for each action
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verification performed below
         if (isset($_POST['action'])) {
             switch ($_POST['action']) {
                 case 'save_config':
-                    if (wp_verify_nonce($_POST['fs_nonce'], 'fs_config_nonce')) {
+                    if (isset($_POST['fs_nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['fs_nonce'])), 'fs_config_nonce')) {
                         update_option('solwed_facturascript_enabled', isset($_POST['fs_enabled']));
-                        update_option('solwed_facturascript_api_url', sanitize_text_field($_POST['fs_api_url']));
-                        update_option('solwed_facturascript_api_token', sanitize_text_field($_POST['fs_api_token']));
-                        echo '<div class="notice notice-success"><p>' . __('Configuración guardada correctamente.', 'solwed-wp') . '</p></div>';
+                        update_option('solwed_facturascript_api_url', isset($_POST['fs_api_url']) ? sanitize_text_field(wp_unslash($_POST['fs_api_url'])) : '');
+                        update_option('solwed_facturascript_api_token', isset($_POST['fs_api_token']) ? sanitize_text_field(wp_unslash($_POST['fs_api_token'])) : '');
+                        echo '<div class="notice notice-success"><p>' . esc_html(__('Configuración guardada correctamente.', 'solwed-wp')) . '</p></div>';
                     }
                     break;
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
                 
-                case 'set_default':
-                    if (wp_verify_nonce($_POST['fs_nonce'], 'fs_config_nonce')) {
-                        update_option('solwed_facturascript_api_url', Solwed_FacturaScript_Integration::DEFAULT_API_URL);
-                        update_option('solwed_facturascript_api_token', Solwed_FacturaScript_Integration::DEFAULT_API_TOKEN);
-                        echo '<div class="notice notice-success"><p>' . __('Configuración por defecto aplicada.', 'solwed-wp') . '</p></div>';
-                    }
-                    break;
+
             }
         }
     }
@@ -681,55 +679,50 @@ function render_facturascript_tab(): void {
                     <?php wp_nonce_field('fs_config_nonce', 'fs_nonce'); ?>
                     <input type="hidden" name="fs_enabled" id="fs_enabled_hidden" value="<?php echo $enabled ? '1' : '0'; ?>" />
                     
-                    <div class="buttons-section">
-                        <button type="submit" class="solwed-btn" name="action" value="save_config">
-                            💾 <?php _e('Guardar Configuración', 'solwed-wp'); ?>
-                        </button>
-                        
-                        <button type="button" class="solwed-btn" id="test-fs-connection">
-                            🔗 <?php _e('Probar Conexión', 'solwed-wp'); ?>
-                        </button>
-                        
-                        <button type="submit" class="solwed-btn" name="action" value="set_default">
-                            ⚙️ <?php _e('Config. Por Defecto', 'solwed-wp'); ?>
-                        </button>
-                    </div>
+
                     
                     <!-- Configuración de API -->
                     <div id="fs-config-details">
-                        <h3><?php _e('Configuración API FacturaScripts', 'solwed-wp'); ?></h3>
+                        <h3><?php esc_html_e('Configuración API FacturaScripts', 'solwed-wp'); ?></h3>
                         <table class="form-table">
                             <tr>
-                                <th><label for="fs_api_url"><?php _e('URL de la API', 'solwed-wp'); ?></label></th>
+                                <th><label for="fs_api_url"><?php esc_html_e('URL de la API', 'solwed-wp'); ?></label></th>
                                 <td>
                                     <input type="url" name="fs_api_url" id="fs_api_url" 
                                            value="<?php echo esc_attr($api_url); ?>" 
                                            class="regular-text" 
-                                           placeholder="http://erpdemo.test/api/3" />
-                                    <p class="description"><?php _e('URL base de la API de FacturaScripts', 'solwed-wp'); ?></p>
+                                           placeholder="https://erpdemo.test/api/3" />
+                                    <p class="description"><?php esc_html_e('URL base de la API de FacturaScripts', 'solwed-wp'); ?></p>
                                 </td>
                             </tr>
                             <tr>
-                                <th><label for="fs_api_token"><?php _e('Token de API', 'solwed-wp'); ?></label></th>
+                                <th><label for="fs_api_token"><?php esc_html_e('Token de API', 'solwed-wp'); ?></label></th>
                                 <td>
                                     <input type="text" name="fs_api_token" id="fs_api_token" 
                                            value="<?php echo esc_attr($api_token); ?>" 
                                            class="regular-text" 
                                            placeholder="Token de autenticación" />
-                                    <p class="description"><?php _e('Token de autenticación para la API', 'solwed-wp'); ?></p>
+                                    <p class="description"><?php esc_html_e('Token de autenticación para la API', 'solwed-wp'); ?></p>
                                 </td>
                             </tr>
                         </table>
+                        
+                        <!-- Botón de guardar debajo del formulario -->
+                        <div class="buttons-section">
+                            <button type="submit" class="solwed-btn" name="action" value="save_config">
+                                💾 <?php esc_html_e('Guardar Configuración', 'solwed-wp'); ?>
+                            </button>
+                        </div>
                     </div>
                 </form>
                 
                 <!-- Funciones adicionales -->
                 <div class="solwed-form-section" style="margin-top: 20px;">
-                    <h3><?php _e('Funciones Adicionales', 'solwed-wp'); ?></h3>
+                    <h3><?php esc_html_e('Funciones Adicionales', 'solwed-wp'); ?></h3>
                     
                     <div style="display: flex; gap: 20px; justify-content: center; padding: 20px;">
                         <button type="button" id="bulk-import-fs" class="solwed-btn">
-                            📥 <?php _e('Importar Envíos', 'solwed-wp'); ?>
+                            📥 <?php esc_html_e('Importar Envíos', 'solwed-wp'); ?>
                         </button>
                     </div>
                     
@@ -738,12 +731,12 @@ function render_facturascript_tab(): void {
                 
                 <!-- Información sobre el funcionamiento -->
                 <div class="solwed-form-section" style="margin-top: 20px;">
-                    <h3><?php _e('¿Cómo funciona?', 'solwed-wp'); ?></h3>
+                    <h3><?php esc_html_e('¿Cómo funciona?', 'solwed-wp'); ?></h3>
                     <ul style="list-style-type: disc; padding-left: 20px;">
-                        <li><strong><?php _e('Automático:', 'solwed-wp'); ?></strong> <?php _e('Detecta formularios de Elementor Pro automáticamente', 'solwed-wp'); ?></li>
-                        <li><strong><?php _e('Título:', 'solwed-wp'); ?></strong> <?php _e('Usa el título de la página como nombre de la oportunidad', 'solwed-wp'); ?></li>
-                        <li><strong><?php _e('Observaciones:', 'solwed-wp'); ?></strong> <?php _e('Incluye todos los datos del formulario', 'solwed-wp'); ?></li>
-                        <li><strong><?php _e('Clientes:', 'solwed-wp'); ?></strong> <?php _e('Crea automáticamente contactos vinculados', 'solwed-wp'); ?></li>
+                        <li><strong><?php esc_html_e('Automático:', 'solwed-wp'); ?></strong> <?php esc_html_e('Detecta formularios de Elementor Pro automáticamente', 'solwed-wp'); ?></li>
+                        <li><strong><?php esc_html_e('Título:', 'solwed-wp'); ?></strong> <?php esc_html_e('Usa el título de la página como nombre de la oportunidad', 'solwed-wp'); ?></li>
+                        <li><strong><?php esc_html_e('Observaciones:', 'solwed-wp'); ?></strong> <?php esc_html_e('Incluye todos los datos del formulario', 'solwed-wp'); ?></li>
+                        <li><strong><?php esc_html_e('Clientes:', 'solwed-wp'); ?></strong> <?php esc_html_e('Crea automáticamente contactos vinculados', 'solwed-wp'); ?></li>
                     </ul>
                 </div>
             </div>
@@ -752,13 +745,13 @@ function render_facturascript_tab(): void {
         <!-- PANEL DE ESTADÍSTICAS (Derecha) -->
         <div class="solwed-fs-sidebar">
             <div class="solwed-form-section solwed-sidebar-panel">
-                <h3><?php _e('📊 Estado de Integración', 'solwed-wp'); ?></h3>
+                <h3><?php esc_html_e('📊 Estado de Integración', 'solwed-wp'); ?></h3>
                 <div id="fs-statistics-content">
                     <?php render_facturascript_statistics($stats); ?>
                 </div>
                 <div class="stats-refresh">
                     <button type="button" id="refresh-fs-stats" class="solwed-btn">
-                        🔄 <?php _e('Actualizar', 'solwed-wp'); ?>
+                        🔄 <?php esc_html_e('Actualizar', 'solwed-wp'); ?>
                     </button>
                 </div>
             </div>
@@ -772,31 +765,6 @@ function render_facturascript_tab(): void {
             const isEnabled = $(this).is(':checked');
             $('#fs_enabled_hidden').val(isEnabled ? '1' : '0');
             $('#fs-status-text').text(isEnabled ? 'Activado' : 'Desactivado');
-        });
-        
-        // Test de conexión
-        $('#test-fs-connection').click(function() {
-            const button = $(this);
-            const originalText = button.text();
-            
-            button.prop('disabled', true).text('🔄 Probando...');
-            $('#fs-action-results').html('<p>Probando conexión con FacturaScripts...</p>');
-            
-            $.post(ajaxurl, {
-                action: 'solwed_test_fs_connection'
-            }, function(response) {
-                let message;
-                if (response.success) {
-                    message = '<div class="notice notice-success"><p>✅ ' + response.data + '</p></div>';
-                } else {
-                    message = '<div class="notice notice-error"><p>❌ ' + response.data + '</p></div>';
-                }
-                $('#fs-action-results').html(message).show();
-            }).fail(function() {
-                $('#fs-action-results').html('<div class="notice notice-error"><p>❌ Error de conexión</p></div>');
-            }).always(function() {
-                button.prop('disabled', false).text(originalText);
-            });
         });
         
         // Importar submissions

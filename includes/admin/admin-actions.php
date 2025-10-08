@@ -33,11 +33,11 @@ class Solwed_WP_Admin_Actions {
      * Manejar guardado de configuración
      */
     public function handle_save_settings(): void {
-        if (!current_user_can('manage_options') || !wp_verify_nonce($_POST['_wpnonce'] ?? '', 'solwed_settings')) {
-            wp_die(__('No tienes permisos para realizar esta acción.', 'solwed-wp'));
+        if (!current_user_can('manage_options') || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'] ?? '')), 'solwed_settings')) {
+            wp_die(esc_html(__('No tienes permisos para realizar esta acción.', 'solwed-wp')));
         }
 
-        $action = $_POST['solwed_action'] ?? '';
+        $action = sanitize_text_field(wp_unslash($_POST['solwed_action'] ?? ''));
         $redirect_tab = 'appearance';
         
         switch ($action) {
@@ -82,8 +82,10 @@ class Solwed_WP_Admin_Actions {
      * Guardar configuración de apariencia
      */
     private function save_appearance_settings(): void {
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verification handled in calling method
         $banner_enabled = isset($_POST['banner_enabled']) && $_POST['banner_enabled'] === '1';
-        $banner_text = sanitize_text_field($_POST['banner_text'] ?? 'Desarrollo Web Profesional');
+        $banner_text = sanitize_text_field(wp_unslash($_POST['banner_text'] ?? 'Desarrollo Web Profesional'));
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
         
         update_option(SOLWED_WP_PREFIX . 'banner_enabled', $banner_enabled);
         update_option(SOLWED_WP_PREFIX . 'banner_text', $banner_text);
@@ -99,9 +101,11 @@ class Solwed_WP_Admin_Actions {
      * Guardar configuración de seguridad
      */
     private function save_security_settings(): void {
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verification handled in calling method
         $security_enabled = isset($_POST['security_enabled']) && $_POST['security_enabled'] === '1';
         $max_attempts = max(1, min(10, intval($_POST['max_login_attempts'] ?? 3)));
         $lockout_duration = intval($_POST['lockout_duration'] ?? 1800);
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
         
         // Validar duración de bloqueo
         $valid_durations = [900, 1800, 3600, 7200, 21600, 86400];
@@ -125,14 +129,16 @@ class Solwed_WP_Admin_Actions {
      * Guardar configuración de SMTP
      */
     private function save_smtp_settings(): void {
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verification handled in calling method
         $smtp_enabled = isset($_POST['smtp_enabled']) && $_POST['smtp_enabled'] === '1';
-        $smtp_host = sanitize_text_field($_POST['smtp_host'] ?? '');
+        $smtp_host = sanitize_text_field(wp_unslash($_POST['smtp_host'] ?? ''));
         $smtp_port = max(1, min(65535, intval($_POST['smtp_port'] ?? 587)));
-        $smtp_username = sanitize_text_field($_POST['smtp_username'] ?? '');
-        $smtp_password = $_POST['smtp_password'] ?? '';
-        $smtp_encryption = in_array($_POST['smtp_encryption'] ?? 'tls', ['none', 'tls', 'ssl']) ? $_POST['smtp_encryption'] : 'tls';
-        $smtp_from_name = sanitize_text_field($_POST['smtp_from_name'] ?? get_option('blogname'));
-        $smtp_from_email = sanitize_email($_POST['smtp_from_email'] ?? 'soporte@solwed.es');
+        $smtp_username = sanitize_text_field(wp_unslash($_POST['smtp_username'] ?? ''));
+        $smtp_password = sanitize_text_field(wp_unslash($_POST['smtp_password'] ?? ''));
+        $smtp_encryption = in_array(sanitize_text_field(wp_unslash($_POST['smtp_encryption'] ?? 'tls')), ['none', 'tls', 'ssl']) ? sanitize_text_field(wp_unslash($_POST['smtp_encryption'])) : 'tls';
+        $smtp_from_name = sanitize_text_field(wp_unslash($_POST['smtp_from_name'] ?? get_option('blogname')));
+        $smtp_from_email = sanitize_email(wp_unslash($_POST['smtp_from_email'] ?? 'soporte@solwed.es'));
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
         
         // Validar email del remitente, usar por defecto soporte@solwed.es si no es válido
         if (!filter_var($smtp_from_email, FILTER_VALIDATE_EMAIL)) {
@@ -167,25 +173,25 @@ class Solwed_WP_Admin_Actions {
      * Manejar test de SMTP - Versión simplificada
      */
     public function handle_test_smtp(): void {
-        if (!current_user_can('manage_options') || !wp_verify_nonce($_POST['_wpnonce'] ?? '', 'solwed_settings')) {
-            wp_die(__('No tienes permisos para realizar esta acción.', 'solwed-wp'));
+        if (!current_user_can('manage_options') || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'] ?? '')), 'solwed_settings')) {
+            wp_die(esc_html(__('No tienes permisos para realizar esta acción.', 'solwed-wp')));
         }
 
         $smtp_module = solwed_wp()->get_module('smtp');
         if (!$smtp_module) {
-            wp_die(__('Módulo SMTP no disponible.', 'solwed-wp'));
+            wp_die(esc_html(__('Módulo SMTP no disponible.', 'solwed-wp')));
         }
 
         // Datos del formulario para el test
         $test_data = [
-            'smtp_host' => sanitize_text_field($_POST['smtp_host'] ?? ''),
+            'smtp_host' => sanitize_text_field(wp_unslash($_POST['smtp_host'] ?? '')),
             'smtp_port' => intval($_POST['smtp_port'] ?? 587),
-            'smtp_username' => sanitize_text_field($_POST['smtp_username'] ?? ''),
-            'smtp_password' => $_POST['smtp_password'] ?? '',
-            'smtp_encryption' => $_POST['smtp_encryption'] ?? 'tls',
-            'smtp_from_name' => sanitize_text_field($_POST['smtp_from_name'] ?? ''),
-            'smtp_from_email' => sanitize_email($_POST['smtp_from_email'] ?? ''),
-            'test_email' => sanitize_email($_POST['test_email_to'] ?? 'soporte@solwed.es')
+            'smtp_username' => sanitize_text_field(wp_unslash($_POST['smtp_username'] ?? '')),
+            'smtp_password' => sanitize_text_field(wp_unslash($_POST['smtp_password'] ?? '')),
+            'smtp_encryption' => sanitize_text_field(wp_unslash($_POST['smtp_encryption'] ?? 'tls')),
+            'smtp_from_name' => sanitize_text_field(wp_unslash($_POST['smtp_from_name'] ?? '')),
+            'smtp_from_email' => sanitize_email(wp_unslash($_POST['smtp_from_email'] ?? '')),
+            'test_email' => sanitize_email(wp_unslash($_POST['test_email_to'] ?? 'soporte@solwed.es'))
         ];
 
         // Ejecutar test
@@ -203,6 +209,7 @@ class Solwed_WP_Admin_Actions {
      * Manejar test de SMTP (sin AJAX)
      */
     private function handle_smtp_test(): void {
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce verification handled in calling method
         $smtp_module = solwed_wp()->get_module('smtp');
         if (!$smtp_module) {
             add_settings_error(
@@ -216,17 +223,18 @@ class Solwed_WP_Admin_Actions {
 
         // Usar la configuración actual del formulario
         $test_config = [
-            'host' => sanitize_text_field($_POST['smtp_host'] ?? ''),
+            'host' => sanitize_text_field(wp_unslash($_POST['smtp_host'] ?? '')),
             'port' => intval($_POST['smtp_port'] ?? 587),
-            'username' => sanitize_text_field($_POST['smtp_username'] ?? ''),
-            'password' => $_POST['smtp_password'] ?? get_option(SOLWED_WP_PREFIX . 'smtp_password', ''),
-            'encryption' => $_POST['smtp_encryption'] ?? 'tls',
-            'from_name' => sanitize_text_field($_POST['smtp_from_name'] ?? ''),
-            'from_email' => sanitize_email($_POST['smtp_from_email'] ?? '')
+            'username' => sanitize_text_field(wp_unslash($_POST['smtp_username'] ?? '')),
+            'password' => sanitize_text_field(wp_unslash($_POST['smtp_password'] ?? get_option(SOLWED_WP_PREFIX . 'smtp_password', ''))),
+            'encryption' => sanitize_text_field(wp_unslash($_POST['smtp_encryption'] ?? 'tls')),
+            'from_name' => sanitize_text_field(wp_unslash($_POST['smtp_from_name'] ?? '')),
+            'from_email' => sanitize_email(wp_unslash($_POST['smtp_from_email'] ?? ''))
         ];
         
         // Email de destino para la prueba
-        $test_email_to = sanitize_email($_POST['test_email_address'] ?? 'soporte@solwed.es');
+        $test_email_to = sanitize_email(wp_unslash($_POST['test_email_address'] ?? 'soporte@solwed.es'));
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
 
         $result = $smtp_module->test_connection($test_config);
         
@@ -236,7 +244,8 @@ class Solwed_WP_Admin_Actions {
                 $test_email_to,
                 __('Test de SMTP - Solwed WP', 'solwed-wp'),
                 sprintf(
-                    __('Este es un email de prueba enviado desde Solwed WP.%s%sConfiguración utilizada:%s- Host: %s%s- Puerto: %s%s- Usuario: %s%s- Encriptación: %s%s%sSi recibes este mensaje, la configuración SMTP está funcionando correctamente.', 'solwed-wp'),
+                    /* translators: %1$s: double line break, %2$s: single line break, %3$s: single line break, %4$s: SMTP host, %5$s: single line break, %6$s: SMTP port, %7$s: single line break, %8$s: SMTP username, %9$s: single line break, %10$s: encryption type, %11$s: double line break, %12$s: single line break */
+                    __('Este es un email de prueba enviado desde Solwed WP.%1$s%2$sConfiguración utilizada:%3$s- Host: %4$s%5$s- Puerto: %6$s%7$s- Usuario: %8$s%9$s- Encriptación: %10$s%11$s%12$sSi recibes este mensaje, la configuración SMTP está funcionando correctamente.', 'solwed-wp'),
                     "\n\n",
                     "\n",
                     "\n",
@@ -256,6 +265,7 @@ class Solwed_WP_Admin_Actions {
                 add_settings_error(
                     'solwed_messages',
                     'solwed_smtp_success',
+                    /* translators: %s: email address where the test email was sent */
                     sprintf(__('¡Test exitoso! Email de prueba enviado correctamente a %s.', 'solwed-wp'), $test_email_to),
                     'updated'
                 );
@@ -271,6 +281,7 @@ class Solwed_WP_Admin_Actions {
             add_settings_error(
                 'solwed_messages',
                 'solwed_smtp_error',
+                /* translators: %s: error message from SMTP test */
                 sprintf(__('Error en el test: %s', 'solwed-wp'), $result['message']),
                 'error'
             );
@@ -281,13 +292,13 @@ class Solwed_WP_Admin_Actions {
      * Manejar desbloqueo de IP
      */
     public function handle_unblock_ip(): void {
-        if (!current_user_can('manage_options') || !wp_verify_nonce($_GET['_wpnonce'] ?? '', 'solwed_unblock_ip')) {
-            wp_die(__('No tienes permisos para realizar esta acción.', 'solwed-wp'));
+        if (!current_user_can('manage_options') || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'] ?? '')), 'solwed_unblock_ip')) {
+            wp_die(esc_html(__('No tienes permisos para realizar esta acción.', 'solwed-wp')));
         }
 
-        $ip = sanitize_text_field($_GET['ip'] ?? '');
+        $ip = sanitize_text_field(wp_unslash($_GET['ip'] ?? ''));
         if (empty($ip)) {
-            wp_die(__('IP no válida.', 'solwed-wp'));
+            wp_die(esc_html(__('IP no válida.', 'solwed-wp')));
         }
 
         $security_module = solwed_wp()->get_module('security');
@@ -297,6 +308,7 @@ class Solwed_WP_Admin_Actions {
             add_settings_error(
                 'solwed_messages',
                 'solwed_message',
+                /* translators: %s: IP address that was unblocked */
                 sprintf(__('IP %s desbloqueada correctamente.', 'solwed-wp'), $ip),
                 'updated'
             );
@@ -304,6 +316,7 @@ class Solwed_WP_Admin_Actions {
             add_settings_error(
                 'solwed_messages',
                 'solwed_message',
+                /* translators: %s: IP address that could not be unblocked */
                 sprintf(__('No se pudo desbloquear la IP %s.', 'solwed-wp'), $ip),
                 'error'
             );
@@ -318,13 +331,13 @@ class Solwed_WP_Admin_Actions {
      * Manejar limpieza de logs
      */
     public function handle_clear_logs(): void {
-        if (!current_user_can('manage_options') || !wp_verify_nonce($_GET['_wpnonce'] ?? '', 'solwed_clear_logs')) {
-            wp_die(__('No tienes permisos para realizar esta acción.', 'solwed-wp'));
+        if (!current_user_can('manage_options') || !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'] ?? '')), 'solwed_clear_logs')) {
+            wp_die(esc_html(__('No tienes permisos para realizar esta acción.', 'solwed-wp')));
         }
 
         global $wpdb;
         
-        $log_type = $_GET['type'] ?? 'all';
+        $log_type = sanitize_text_field(wp_unslash($_GET['type'] ?? 'all'));
         $success = false;
         
         switch ($log_type) {
@@ -412,14 +425,14 @@ class Solwed_WP_Admin_Actions {
         
         $user = wp_get_current_user();
         
-        $wpdb->insert(
+        $wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
             $wpdb->prefix . 'solwed_security_logs',
             [
                 'action' => $action,
                 'user_id' => $user->ID,
                 'user_login' => $user->user_login,
                 'ip_address' => $this->get_client_ip(),
-                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+                'user_agent' => sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'] ?? '')),
                 'details' => json_encode($data),
                 'timestamp' => current_time('mysql')
             ],
@@ -435,7 +448,7 @@ class Solwed_WP_Admin_Actions {
         
         foreach ($ip_keys as $key) {
             if (array_key_exists($key, $_SERVER) === true) {
-                foreach (explode(',', $_SERVER[$key]) as $ip) {
+                foreach (explode(',', sanitize_text_field(wp_unslash($_SERVER[$key]))) as $ip) {
                     $ip = trim($ip);
                     if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false) {
                         return $ip;
@@ -444,7 +457,7 @@ class Solwed_WP_Admin_Actions {
             }
         }
         
-        return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        return sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'));
     }
 
 
@@ -453,10 +466,11 @@ class Solwed_WP_Admin_Actions {
      * Manejar guardado de código personalizado
      */
     public function handle_save_code(): void {
-        if (!current_user_can('manage_options') || !wp_verify_nonce($_POST['_wpnonce'] ?? '', 'solwed_save_code')) {
-            wp_die(__('No tienes permisos para realizar esta acción.', 'solwed-wp'));
+        if (!current_user_can('manage_options') || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wpnonce'] ?? '')), 'solwed_save_code')) {
+            wp_die(esc_html(__('No tienes permisos para realizar esta acción.', 'solwed-wp')));
         }
 
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $custom_code = wp_unslash($_POST['custom_code'] ?? '');
         
         // Validar código PHP básico
@@ -505,7 +519,7 @@ class Solwed_WP_Admin_Actions {
             $return_code = 0;
             exec("php -l $temp_file 2>&1", $output, $return_code);
             
-            unlink($temp_file);
+            wp_delete_file($temp_file);
             
             return $return_code === 0;
         }

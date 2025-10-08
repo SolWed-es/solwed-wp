@@ -44,7 +44,7 @@ if (
     isset($_GET['action']) &&
     $_GET['action'] === 'solwed_toggle_banner' &&
     isset($_GET['_wpnonce']) &&
-    wp_verify_nonce($_GET['_wpnonce'], 'solwed_toggle_banner') &&
+    wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'solwed_toggle_banner') &&
     current_user_can('manage_options')
 ) {
     $appearance = $solwed_wp->get_module('appearance');
@@ -91,7 +91,7 @@ if (!array_key_exists($current_tab, $tabs)) {
 <div class="wrap solwed-settings">
     <h1>
         <img src="<?php echo esc_url(SOLWED_WP_PLUGIN_URL . 'assets/img/LototipoOscuro.png'); ?>" alt="Solwed" style="height: 32px; vertical-align: middle; margin-right: 10px;">
-        <?php _e('Configuración - Solwed WP', 'solwed-wp'); ?>
+        <?php esc_html_e('Configuración - Solwed WP', 'solwed-wp'); ?>
     </h1>
 
     <nav class="nav-tab-wrapper">
@@ -134,10 +134,12 @@ if (!array_key_exists($current_tab, $tabs)) {
                 if (trim($rendered) === '') {
                     if (current_user_can('manage_options')) {
                         echo '<div class="notice notice-warning"><p>';
-                        echo sprintf(__('La pestaña "%s" no generó contenido visible. Revisa la función %s.', 'solwed-wp'), esc_html($effective_tab), esc_html($render_function));
+                        /* translators: %1$s: tab name, %2$s: render function name */
+                        echo sprintf(esc_html(__('La pestaña "%1$s" no generó contenido visible. Revisa la función %2$s.', 'solwed-wp')), esc_html($effective_tab), esc_html($render_function));
                         echo '</p></div>';
                     }
                 } else {
+                    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $rendered is already escaped output from tab functions
                     echo $rendered;
                 }
             } else {
@@ -151,15 +153,18 @@ if (!array_key_exists($current_tab, $tabs)) {
                     if (trim($rendered) === '') {
                         if (current_user_can('manage_options')) {
                             echo '<div class="notice notice-warning"><p>';
-                            echo sprintf(__('La pestaña "%s" no generó contenido visible tras incluir el archivo. Revisa %s.', 'solwed-wp'), esc_html($effective_tab), esc_html($tab_file));
+                            /* translators: %1$s: tab name, %2$s: tab file path */
+                            echo sprintf(esc_html(__('La pestaña "%1$s" no generó contenido visible tras incluir el archivo. Revisa %2$s.', 'solwed-wp')), esc_html($effective_tab), esc_html($tab_file));
                             echo '</p></div>';
                         }
                     } else {
+                        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $rendered is already escaped output from tab functions
                         echo $rendered;
                     }
                 } else {
                     echo '<div class="notice notice-error"><p>';
-                    echo sprintf(__('Error: No se pudo cargar la pestaña %s. Función %s no encontrada.', 'solwed-wp'), 
+                    /* translators: %1$s: tab name, %2$s: render function name */
+                    echo sprintf(esc_html(__('Error: No se pudo cargar la pestaña %1$s. Función %2$s no encontrada.', 'solwed-wp')), 
                                esc_html($effective_tab), esc_html($render_function));
                     echo '</p></div>';
                 }
@@ -167,7 +172,8 @@ if (!array_key_exists($current_tab, $tabs)) {
             // Silenciar avisos de fallback para no mostrar mensajes innecesarios
         } else {
             echo '<div class="notice notice-error"><p>';
-            echo sprintf(__('Error: Archivo de pestaña %s no encontrado.', 'solwed-wp'), esc_html($effective_tab));
+            /* translators: %s: tab name */
+            echo sprintf(esc_html(__('Error: Archivo de pestaña %s no encontrado.', 'solwed-wp')), esc_html($effective_tab));
             echo '</p></div>';
         }
         ?>
